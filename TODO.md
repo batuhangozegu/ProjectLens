@@ -80,12 +80,12 @@ projectlens analyze . --output analysis.json
 
 Kararlar: PostgreSQL 18 yerelde kurulu; bağlantı bilgisi `DATABASE_URL` ile ortam değişkeninden gelir, gerçek `.env` commit edilmez. Persistence testleri SQLite ile çalışır; PostgreSQL ile doğrulama ayrı bir adımdır. Docker bu makinede kurulu değil; Compose ve CI dosyaları Docker kurulana kadar "doğrulanmadı" olarak işaretlenir. Analiz çekirdeği FastAPI/SQLAlchemy import etmez.
 
-### 2.1 — Güvenli clone/checkout (sıradaki adım)
+### 2.1 — Güvenli clone/checkout
 
-- [ ] Yalnızca public https GitHub URL'lerini kabul eden doğrulayıcı yaz (ssh, file, yerel yol, credential içeren URL, başka host reddedilir).
-- [ ] Git alt sürecini shell kullanmadan, timeout ve çıktı/disk limitiyle çalıştır; hook, submodule ve git config etkilerini kapat.
-- [ ] Branch ve commit kimliğiyle tekrarlanabilir checkout oluştur; checkout dizinini izole ve temizlenebilir tut.
-- [ ] Yerel git repository'leriyle (ağ gerektirmeyen) testler yaz; doğrula ve commit at.
+- [x] Yalnızca public https GitHub URL'lerini kabul eden doğrulayıcı yaz (ssh, file, yerel yol, credential içeren URL, başka host reddedilir).
+- [x] Git alt sürecini shell kullanmadan, timeout ve çıktı/disk limitiyle çalıştır; hook, submodule ve git config etkilerini kapat.
+- [x] Branch ve commit kimliğiyle tekrarlanabilir checkout oluştur; checkout dizinini izole ve temizlenebilir tut.
+- [x] Yerel git repository'leriyle (ağ gerektirmeyen) testler yaz; doğrula ve commit at.
 
 ### 2.2 — Project ve AnalysisSnapshot persistence
 
@@ -94,7 +94,7 @@ Kararlar: PostgreSQL 18 yerelde kurulu; bağlantı bilgisi `DATABASE_URL` ile or
 - [x] Repository katmanı: snapshot'ı AnalysisResult JSON'u olarak sakla ve oku.
 - [x] SQLite ile testler; doğrula ve commit at.
 
-### 2.3 — FastAPI uçları
+### 2.3 — FastAPI uçları (sıradaki adım)
 
 - [ ] Project oluşturma (URL doğrulama + clone + analiz + snapshot) ve listeleme/okuma uçlarını ekle.
 - [ ] Uzun analiz işlerinin yaşam döngüsü ve concurrency sınırını belirle; gerekirse worker ekle.
