@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import PureWindowsPath
 from typing import Any
 
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 
 
 def _repo_path(path: str) -> str:
@@ -106,8 +106,11 @@ class AnalysisResult:
     files: tuple[FileRecord, ...] = ()
     dependency_edges: tuple[DependencyEdge, ...] = ()
     cycles: tuple[tuple[str, ...], ...] = ()
+    external_imports: tuple[dict[str, Any], ...] = ()
+    unresolved_imports: tuple[dict[str, Any], ...] = ()
     metrics: dict[str, Any] = field(default_factory=dict)
     diagnostics: tuple[AnalysisDiagnostic, ...] = ()
+    partial: bool = False
     schema_version: str = SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -122,6 +125,13 @@ class AnalysisResult:
             sorted(_repo_path(path) for path in cycle)
             for cycle in sorted(self.cycles, key=lambda cycle: tuple(sorted(_repo_path(path) for path in cycle)))
         ]
+        for key in ("external_imports", "unresolved_imports"):
+            value[key] = [
+                dict(item)
+                for item in sorted(getattr(self, key), key=lambda item: (
+                    item["source_file"], item["line"], item["module"], item["kind"]
+                ))
+            ]
         value["diagnostics"] = [
             asdict(item)
             for item in sorted(
@@ -141,8 +151,11 @@ class AnalysisResult:
             files=tuple(FileRecord(**item) for item in value.get("files", ())),
             dependency_edges=tuple(DependencyEdge(**item) for item in value.get("dependency_edges", ())),
             cycles=tuple(tuple(cycle) for cycle in value.get("cycles", ())),
+            external_imports=tuple(dict(item) for item in value.get("external_imports", ())),
+            unresolved_imports=tuple(dict(item) for item in value.get("unresolved_imports", ())),
             metrics=value.get("metrics", {}),
             diagnostics=tuple(AnalysisDiagnostic(**item) for item in value.get("diagnostics", ())),
+            partial=value.get("partial", False),
             schema_version=value["schema_version"],
         )
 

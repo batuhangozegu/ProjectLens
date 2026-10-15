@@ -47,16 +47,16 @@ Kabul: Uygulama kodu olmadan, uygulanacak yapı ve ilk milestone sınırları ok
 - [x] İzole dosya, self-loop, cycle ve çözümleme testlerini yaz.
 - [x] Doğrula ve commit at.
 
-### 1.5 — Metrikler ve pipeline (sıradaki adım)
+### 1.5 — Metrikler ve pipeline
 
-- [ ] Toplam dosya/Python dosyası sayısı, fiziksel LOC ve Python LOC hesapla.
-- [ ] En büyük dosyaları ve TODO/FIXME toplamlarını üret.
-- [ ] Scanner, parser, graph ve metrik aşamalarını birleştir.
-- [ ] Kısmi analiz tanılarını ve fatal hata davranışını uygula.
-- [ ] Kontrollü fixture repository üzerinden beklenen sonuçları test et.
-- [ ] Doğrula ve commit at.
+- [x] Toplam dosya/Python dosyası sayısı, fiziksel LOC ve Python LOC hesapla.
+- [x] En büyük dosyaları ve TODO/FIXME toplamlarını üret.
+- [x] Scanner, parser, graph ve metrik aşamalarını birleştir.
+- [x] Kısmi analiz tanılarını ve fatal hata davranışını uygula.
+- [x] Kontrollü fixture repository üzerinden beklenen sonuçları test et.
+- [x] Doğrula ve commit at.
 
-### 1.6 — CLI çıktısı ve milestone kabulü
+### 1.6 — CLI çıktısı ve milestone kabulü (sıradaki adım)
 
 - [ ] Okunabilir terminal özeti ve --output JSON export ekle.
 - [ ] Geçersiz path, yazılamayan output ve kısmi analiz için çıkış kodlarını belgele/test et.
