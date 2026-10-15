@@ -133,11 +133,11 @@ Kararlar: Task durumları `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. Manuel durum
 - [x] Boş roadmap davranışı: yüzde yerine açık "boş" durumu (0% değil).
 - [x] Toplam, bölüm ve kategori bazında dağılım ve yüzde; test et, doğrula ve commit at.
 
-### 3.4 — Import ve ilerleme uçları (sıradaki adım)
+### 3.4 — Import ve ilerleme uçları
 
-- [ ] TODO.md import ucu: tekrar import kararlı (anahtar eşleşmesi, çoğalma yok, manuel değişiklikleri ezme kuralı belgeli).
-- [ ] Proje roadmap ilerleme ucu (3.3 formülü).
-- [ ] API testleri ve belgeler; doğrula ve commit at.
+- [x] TODO.md import ucu: tekrar import kararlı (anahtar eşleşmesi, çoğalma yok, manuel değişiklikleri ezme kuralı belgeli).
+- [x] Proje roadmap ilerleme ucu (3.3 formülü).
+- [x] API testleri ve belgeler; doğrula ve commit at.
 
 ## 4 — Code-aware tracking (backend)
 

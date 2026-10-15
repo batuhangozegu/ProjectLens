@@ -267,6 +267,41 @@ def list_tasks(session: Session, project_id: int, *, status: list[str] | None = 
     return items, total
 
 
+def get_imported_tasks_by_keys(session: Session, project_id: int, source_keys: set[str]) -> dict[str, Task]:
+    """Load imported tasks matching checklist keys for one project."""
+    if not source_keys:
+        return {}
+    tasks = session.scalars(
+        select(Task).where(
+            Task.project_id == project_id,
+            Task.source == "import",
+            Task.source_key.in_(source_keys),
+        )
+    )
+    return {task.source_key: task for task in tasks if task.source_key is not None}
+
+
+def list_imported_tasks(session: Session, project_id: int) -> list[Task]:
+    """List imported tasks in stable document/insertion order."""
+    return list(session.scalars(
+        select(Task).where(Task.project_id == project_id, Task.source == "import")
+        .order_by(Task.position, Task.id)
+    ))
+
+
+def get_max_task_position(session: Session, project_id: int) -> int | None:
+    """Return the current highest position for a project's tasks."""
+    return session.scalar(select(func.max(Task.position)).where(Task.project_id == project_id))
+
+
+def iter_task_progress_fields(session: Session, project_id: int, *, source: str | None = None):
+    """Stream only the task fields needed for progress calculation."""
+    query = select(Task.status, Task.category, Task.priority).where(Task.project_id == project_id)
+    if source is not None:
+        query = query.where(Task.source == source)
+    return session.execute(query.execution_options(yield_per=500))
+
+
 def update_task(session: Session, project_id: int, task_id: int, changes: dict[str, Any]) -> Task:
     task = get_task(session, project_id, task_id)
     if "status" in changes:

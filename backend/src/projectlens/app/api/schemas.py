@@ -167,3 +167,65 @@ class TaskList(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class RoadmapSchema(BaseModel):
+    model_config = {"strict": True}
+
+
+class RoadmapImportRequest(RoadmapSchema):
+    model_config = {"extra": "forbid", "strict": True}
+    markdown: str
+    dry_run: bool = False
+
+
+class RoadmapImportItem(RoadmapSchema):
+    source_key: str | None = None
+    title: str
+    reason: str | None = None
+
+
+class RoadmapConflict(RoadmapImportItem):
+    reason: str
+
+
+class RoadmapDiagnostic(RoadmapSchema):
+    severity: str
+    message: str
+    line: int | None = None
+
+
+class RoadmapImportSummary(RoadmapSchema):
+    created: int
+    updated: int
+    unchanged: int
+    conflicts: int
+    skipped: int
+    missing_from_source: int
+
+
+class RoadmapImportResponse(RoadmapSchema):
+    dry_run: bool
+    summary: RoadmapImportSummary
+    created: list[RoadmapImportItem]
+    updated: list[RoadmapImportItem]
+    conflicts: list[RoadmapConflict]
+    skipped: list[RoadmapImportItem]
+    missing_from_source: list[RoadmapImportItem]
+    diagnostics: list[RoadmapDiagnostic]
+    truncated: dict[str, bool]
+
+
+class RoadmapProgressResponse(RoadmapSchema):
+    formula_version: str
+    total: int
+    counts: dict[str, int]
+    completed: int
+    percent_complete: float | None
+    state: str
+    has_blocked: bool
+    remaining: int
+    breakdown_by_category: dict[str, dict]
+    breakdown_by_section: dict[str, dict]
+    formula: str
+    manual_status_only: bool

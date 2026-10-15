@@ -59,6 +59,28 @@ curl http://127.0.0.1:8000/api/v1/health
 
 The create endpoint returns immediately with project and job IDs; poll the returned `job_url` for completion. The API only accepts public HTTPS GitHub repository URLs.
 
+### Roadmap import and progress
+
+Import Markdown checklist text directly in the request body; the API does not
+read server-side files. The request is limited to 1 MiB. Re-importing matches
+stable parser keys, creates no duplicates, and only checked boxes can complete
+an existing TODO or IN_PROGRESS task. Existing titles/categories and manually
+managed tasks are preserved. Use `dry_run` to preview the same report without
+database writes.
+
+```sh
+curl -X POST http://127.0.0.1:8000/api/v1/projects/PROJECT_ID/roadmap/import \
+  -H 'Content-Type: application/json' \
+  --data-binary '{"markdown":"# Setup\n- [ ] Install dependencies\n- [x] Create project\n","dry_run":true}'
+curl http://127.0.0.1:8000/api/v1/projects/PROJECT_ID/roadmap/progress
+curl 'http://127.0.0.1:8000/api/v1/projects/PROJECT_ID/roadmap/progress?source=import'
+```
+
+Progress counts DONE tasks as complete; IN_PROGRESS earns no partial credit,
+and BLOCKED tasks remain in the denominator. An empty roadmap reports a null
+percentage and `state: "empty"`. This is manual task status only; analysis-based
+estimates are not included.
+
 ## Run tests
 
 From the repository root, the default test run uses isolated temporary SQLite

@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from projectlens.app.api.errors import install_error_handlers
 from projectlens.app.api.routers import router
 from projectlens.app.api.task_router import router as task_router
+from projectlens.app.api.roadmap_router import router as roadmap_router
 from projectlens.app.db.repository import mark_orphaned_jobs_interrupted
 from projectlens.app.db.session import create_db_engine, create_session_factory
 from projectlens.app.db.settings import Settings as DatabaseSettings, get_settings
@@ -100,6 +101,7 @@ def create_app(settings=None, *, engine=None, session_factory=None, checkout_fun
     )
     app.include_router(router, prefix="/api/v1")
     app.include_router(task_router, prefix="/api/v1")
+    app.include_router(roadmap_router, prefix="/api/v1")
     install_error_handlers(app)
 
     return app
