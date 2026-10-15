@@ -10,15 +10,14 @@ from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 
 
-def test_migration_upgrade_and_downgrade_sqlite_file(tmp_path, monkeypatch):
-    database = tmp_path / "migration.sqlite"
-    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{database.as_posix()}")
+def test_migration_upgrade_and_downgrade_sqlite_file(test_database, monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", test_database["url"])
     backend = Path(__file__).parents[2]
     config = Config(str(backend / "alembic.ini"))
     config.set_main_option("script_location", str(backend / "migrations"))
 
     command.upgrade(config, "head")
-    engine = create_engine(f"sqlite:///{database.as_posix()}")
+    engine = create_engine(test_database["url"])
     try:
         inspector = inspect(engine)
         assert {"projects", "analysis_snapshots", "analysis_jobs", "alembic_version"} <= set(inspector.get_table_names())
@@ -29,7 +28,7 @@ def test_migration_upgrade_and_downgrade_sqlite_file(tmp_path, monkeypatch):
         engine.dispose()
 
     command.downgrade(config, "base")
-    engine = create_engine(f"sqlite:///{database.as_posix()}")
+    engine = create_engine(test_database["url"])
     try:
         assert set(inspect(engine).get_table_names()) <= {"alembic_version"}
     finally:

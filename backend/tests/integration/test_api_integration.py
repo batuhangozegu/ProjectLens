@@ -41,9 +41,9 @@ class HoldingExecutor:
 
 
 @pytest.fixture
-def api_factory(tmp_path):
-    db_path = tmp_path / "api.sqlite"
-    engine = create_db_engine(database_url=f"sqlite:///{db_path}")
+def api_factory(tmp_path, test_database):
+    database_url = test_database["url"]
+    engine = create_db_engine(database_url=database_url)
     Base.metadata.create_all(engine)
     source = tmp_path / "repo"
     source.mkdir()
@@ -58,14 +58,14 @@ def api_factory(tmp_path):
     def checkout(url, *, ref=None, commit=None, **kwargs):
         return checkout_repository(url, ref=ref, commit=commit, _clone_url_override=str(source), **kwargs)
 
-    yield db_path, source, commit, checkout
+    yield database_url, source, commit, checkout
     engine.dispose()
 
 
 def _client(api_factory, *, executor=None, checkout=None, max_workers=2, max_queue=8):
-    db_path, _source, _commit, default_checkout = api_factory
+    database_url, _source, _commit, default_checkout = api_factory
     app = create_app(
-        APISettings(database_url=f"sqlite:///{db_path}", max_workers=max_workers, max_queue=max_queue),
+        APISettings(database_url=database_url, max_workers=max_workers, max_queue=max_queue),
         checkout_function=checkout or default_checkout,
         executor=executor or InlineExecutor(),
     )
@@ -153,8 +153,8 @@ def test_timeout_code_cleanup_and_pagination_bounds(api_factory):
 
 
 def test_startup_marks_orphaned_jobs_interrupted(api_factory):
-    db_path, _source, _commit, checkout = api_factory
-    engine = create_db_engine(database_url=f"sqlite:///{db_path}")
+    database_url, _source, _commit, checkout = api_factory
+    engine = create_db_engine(database_url=database_url)
     factory = create_session_factory(engine)
     with factory() as session, session.begin():
         project = create_project(session, "Orphan", canonical_repository_url="https://github.com/example/orphan")

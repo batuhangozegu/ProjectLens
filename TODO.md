@@ -100,12 +100,15 @@ Kararlar: PostgreSQL 18 yerelde kurulu; bağlantı bilgisi `DATABASE_URL` ile or
 - [x] Uzun analiz işlerinin yaşam döngüsü ve concurrency sınırını belirle; gerekirse worker ekle.
 - [x] Hata zarfı, girdi doğrulama ve API testleri; doğrula ve commit at.
 
-### 2.4 — PostgreSQL doğrulaması, Docker Compose ve CI (sıradaki adım)
+### 2.4 — PostgreSQL doğrulaması, Docker Compose ve CI
 
-- [ ] Yerel PostgreSQL ile migration ve testleri doğrula.
-- [ ] Dockerfile ve Docker Compose ekle (Docker kurulana kadar doğrulanmadı olarak işaretle).
-- [ ] Backend CI iş akışını ekle.
-- [ ] Setup belgelerini ve README'yi güncelle; doğrula ve commit at.
+- [x] Yerel PostgreSQL ile migration ve testleri doğrula.
+- [x] Dockerfile ve Docker Compose ekle (yazıldı; Docker kurulu olmadığı için build/up doğrulanmadı — bkz. aşağıdaki not).
+- [x] Backend CI iş akışını ekle.
+- [x] Setup belgelerini ve README'yi güncelle; doğrula ve commit at.
+
+
+Not: PostgreSQL 18 üzerinde migration, gerçek uçtan uca API akışı ve tüm testler (140) doğrulandı. Dockerfile/Compose ve GitHub Actions çalıştırılmadı; YAML sözdizimi ayrıştırıldı. Docker kurulunca `docker compose build` ve `up` ayrıca denenecek.
 
 ## 3 — Project tracking (backend)
 

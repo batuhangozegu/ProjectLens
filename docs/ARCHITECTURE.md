@@ -160,3 +160,30 @@ Jobs run in a bounded in-process `ThreadPoolExecutor` (default two workers and e
 The job table is persisted by Alembic revision `0002_analysis_jobs`. On application startup, queued or running rows left by a prior process are marked failed with code `interrupted`; the in-process executor does not resume work. This deployment model is for one API process: multiple workers would need shared coordination before being enabled. If a snapshot already exists for the same project, resolved commit SHA, and analyzer schema version, the job succeeds by linking to that snapshot rather than creating a duplicate. Deleting a project cascades to its jobs and snapshots.
 
 All client errors use `{"error":{"code":"...","message":"..."}}`; validation, missing-resource, queue-full, checkout, timeout, invalid-ref, and analysis errors have stable machine-readable codes. Generic server errors do not expose exception details. Request bodies use the framework defaults for size limits. CORS is not enabled yet; it belongs with the frontend milestone.
+
+### PostgreSQL test strategy, CI, and container deployment (2.4)
+
+DB-touching tests share `backend/tests/conftest.py`. SQLite remains the default
+and uses a temporary file per test. Setting `TEST_DATABASE_URL` adds a
+PostgreSQL run for repository, API integration, and migration tests. The target
+database name must end in `_test`; otherwise the fixture refuses to proceed.
+For each test, only the ProjectLens tables and `alembic_version` are dropped
+before and after the test. Repository and API tests create their schema from
+the ORM metadata; migration tests run Alembic `upgrade head` and `downgrade
+base`. `DATABASE_URL` is never selected as the test target.
+
+The backend GitHub Actions workflow separates core checks from optional app
+dependencies: the core suite runs on Python 3.10, 3.12, and 3.13 without the
+`app` extra, while Python 3.12 runs the app suite against a disposable
+PostgreSQL service and a `_test` database. A Docker image build job is included
+without publishing an image.
+
+Compose topology is PostgreSQL with a named volume and readiness probe, a
+one-shot Alembic migration service, then the API after successful migration.
+The API port binds to loopback, runs read-only with a temporary filesystem for
+repository checkouts, and runs as a non-root user in the image. Compose and
+Docker files are **unverified**: Docker was not available to the author, so
+neither image build nor `docker compose up` was run. What has been verified is
+that migrations 0001 and 0002 ran on local PostgreSQL 18 and a real end-to-end
+API flow (public repository clone, analysis, snapshot persistence) completed
+on that database.

@@ -29,8 +29,8 @@ FIXTURE = Path(__file__).parents[1] / "fixtures" / "sample_repo"
 
 
 @pytest.fixture
-def factory(tmp_path):
-    engine = create_db_engine(database_url=f"sqlite:///{tmp_path / 'db.sqlite'}")
+def factory(test_database):
+    engine = create_db_engine(database_url=test_database["url"])
     Base.metadata.create_all(engine)
     yield create_session_factory(engine)
     engine.dispose()
