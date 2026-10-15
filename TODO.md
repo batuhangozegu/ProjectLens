@@ -114,26 +114,26 @@ Not: PostgreSQL 18 üzerinde migration, gerçek uçtan uca API akışı ve tüm 
 
 Kararlar: Task durumları `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. Manuel durum, analizden hesaplanan ilerleme tahmininden ayrı kalır (bu milestone yalnızca manuel durumu kapsar). Saf mantık (TODO.md ayrıştırma, ilerleme formülü) `projectlens/tracking/` altında, FastAPI/SQLAlchemy import etmeden yazılır; DB ve API katmanı `projectlens/app/` altında kalır.
 
-### 3.1 — Task modeli, durum geçişleri ve CRUD API (sıradaki adım)
+### 3.1 — Task modeli, durum geçişleri ve CRUD API
 
-- [ ] Task ORM modeli ve migration (proje bağlı; başlık, açıklama, durum, priority, category, sıra, kaynak/source_key, zaman damgaları).
-- [ ] Geçerli durum geçişleri tablosu ve geçersiz geçişte net hata.
-- [ ] Repository ve `/api/v1/projects/{id}/tasks` CRUD uçları (liste filtreleri: durum, priority, category; sayfalama).
-- [ ] SQLite + PostgreSQL testleri; doğrula ve commit at.
+- [x] Task ORM modeli ve migration (proje bağlı; başlık, açıklama, durum, priority, category, sıra, kaynak/source_key, zaman damgaları).
+- [x] Geçerli durum geçişleri tablosu ve geçersiz geçişte net hata.
+- [x] Repository ve `/api/v1/projects/{id}/tasks` CRUD uçları (liste filtreleri: durum, priority, category; sayfalama).
+- [x] SQLite + PostgreSQL testleri; doğrula ve commit at.
 
 ### 3.2 — TODO.md checklist ayrıştırıcısı (saf mantık)
 
-- [ ] Markdown başlıklarını ve `- [ ]` / `- [x]` maddelerini ayrıştır (CRLF, iç içe liste, kod blokları, başlık sonu notları).
-- [ ] Her madde için kararlı `source_key` üret (bölüm yolu + normalize başlık + tekrar sırası); aynı dosya ikinci kez ayrıştırıldığında aynı anahtarlar çıkmalı.
-- [ ] Gerçek `TODO.md` ve sentetik edge-case testleri; doğrula ve commit at.
+- [x] Markdown başlıklarını ve `- [x]` / `- [x]` maddelerini ayrıştır (CRLF, iç içe liste, kod blokları, başlık sonu notları).
+- [x] Her madde için kararlı `source_key` üret (bölüm yolu + normalize başlık + tekrar sırası); aynı dosya ikinci kez ayrıştırıldığında aynı anahtarlar çıkmalı.
+- [x] Gerçek `TODO.md` ve sentetik edge-case testleri; doğrula ve commit at.
 
 ### 3.3 — Roadmap ilerleme formülü (saf mantık)
 
-- [ ] Formülü tanımla ve belgele: yalnızca DONE tamamlanmış sayılır, IN_PROGRESS kısmi puan almaz, BLOCKED paydada kalır.
-- [ ] Boş roadmap davranışı: yüzde yerine açık "boş" durumu (0% değil).
-- [ ] Toplam, bölüm ve kategori bazında dağılım ve yüzde; test et, doğrula ve commit at.
+- [x] Formülü tanımla ve belgele: yalnızca DONE tamamlanmış sayılır, IN_PROGRESS kısmi puan almaz, BLOCKED paydada kalır.
+- [x] Boş roadmap davranışı: yüzde yerine açık "boş" durumu (0% değil).
+- [x] Toplam, bölüm ve kategori bazında dağılım ve yüzde; test et, doğrula ve commit at.
 
-### 3.4 — Import ve ilerleme uçları
+### 3.4 — Import ve ilerleme uçları (sıradaki adım)
 
 - [ ] TODO.md import ucu: tekrar import kararlı (anahtar eşleşmesi, çoğalma yok, manuel değişiklikleri ezme kuralı belgeli).
 - [ ] Proje roadmap ilerleme ucu (3.3 formülü).
