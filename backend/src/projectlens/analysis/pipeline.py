@@ -22,7 +22,7 @@ _PARTIAL_SCAN_DIAGNOSTICS = {
 }
 
 
-def analyze(options: AnalysisOptions) -> AnalysisResult:
+def analyze(options: AnalysisOptions, *, largest_limit: int = 10) -> AnalysisResult:
     """Scan, parse, resolve dependencies, and measure a repository.
 
     Fatal root validation errors from the scanner propagate as ``ScanError``.
@@ -48,7 +48,7 @@ def analyze(options: AnalysisOptions) -> AnalysisResult:
         try:
             data = (root / Path(record.path)).read_bytes()
         except OSError as exc:
-            diagnostic = AnalysisDiagnostic("read", record.path, "UnreadableFile", str(exc))
+            diagnostic = AnalysisDiagnostic("read", record.path, "UnreadableFile", exc.strerror or type(exc).__name__)
             diagnostics.append(diagnostic)
             records.append(replace(record, analysis_status="unreadable"))
             continue
@@ -78,7 +78,7 @@ def analyze(options: AnalysisOptions) -> AnalysisResult:
     python_paths = [item.path for item in records if item.language == "python"]
     dependency = build_dependency_graph(python_paths, parsed_files)
     diagnostics.extend(dependency.diagnostics)
-    metrics = compute_metrics(records, parsed_files, dependency)
+    metrics = compute_metrics(records, parsed_files, dependency, largest_limit=largest_limit)
     partial = any(item.analysis_status in {"unreadable", "skipped_size_limit", "parse_failed", "analyzed_with_diagnostics"} for item in records)
     partial = partial or any(item.error_type in _PARTIAL_SCAN_DIAGNOSTICS for item in diagnostics)
 

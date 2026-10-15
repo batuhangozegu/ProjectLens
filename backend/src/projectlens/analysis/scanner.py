@@ -8,15 +8,21 @@ or executes repository code.
 from __future__ import annotations
 
 import fnmatch
+import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from .models import AnalysisDiagnostic, AnalysisOptions, FileRecord
+from .models import AnalysisDiagnostic, AnalysisOptions, FileRecord, RESULT_MARKER_KEY, RESULT_MARKER_VALUE
 
 
 class ScanError(ValueError):
     """Fatal root validation failure."""
+
+
+def _os_error_message(exc: OSError) -> str:
+    """Keep machine-specific filenames out of deterministic result JSON."""
+    return exc.strerror or type(exc).__name__
 
 
 @dataclass(frozen=True)
@@ -84,6 +90,21 @@ def scan_repository(options: AnalysisOptions) -> ScanResult:
     patterns = tuple(options.exclude_patterns)
     files: list[FileRecord] = []
     diagnostics: list[AnalysisDiagnostic] = []
+    exact_exclusions: dict[Path, str] = {}
+    try:
+        root_resolved = root.resolve()
+        for configured in options.excluded_paths:
+            candidate = Path(configured).resolve(strict=False)
+            try:
+                relative = normalize_repo_path(os.path.relpath(candidate, root_resolved))
+            except ValueError:
+                continue
+            if relative == ".." or relative.startswith("../") or os.path.isabs(relative):
+                continue
+            exact_exclusions[candidate] = relative
+            diagnostics.append(AnalysisDiagnostic("scan", relative, "Excluded", "analysis output path excluded"))
+    except OSError:
+        exact_exclusions = {}
     pending = [root]
     while pending:
         directory = pending.pop()
@@ -92,7 +113,7 @@ def scan_repository(options: AnalysisOptions) -> ScanResult:
                 children = sorted(entries, key=lambda e: normalize_repo_path(os.path.relpath(e.path, root)).casefold())
         except OSError as exc:
             rel_dir = "" if directory == root else normalize_repo_path(os.path.relpath(directory, root))
-            diagnostics.append(AnalysisDiagnostic("scan", rel_dir or None, "UnreadableDirectory", str(exc)))
+            diagnostics.append(AnalysisDiagnostic("scan", rel_dir or None, "UnreadableDirectory", _os_error_message(exc)))
             continue
         subdirs = []
         for entry in children:
@@ -101,6 +122,9 @@ def scan_repository(options: AnalysisOptions) -> ScanResult:
                 if entry.is_symlink():
                     diagnostics.append(AnalysisDiagnostic("scan", rel, "SymlinkSkipped", "symlink was not followed or read"))
                 elif entry.is_dir(follow_symlinks=False):
+                    resolved_entry = Path(entry.path).resolve(strict=False)
+                    if resolved_entry in exact_exclusions:
+                        continue
                     if _excluded(rel, True, patterns):
                         diagnostics.append(AnalysisDiagnostic("scan", rel, "Excluded", "directory excluded by scanner rules"))
                     else:
@@ -113,6 +137,9 @@ def scan_repository(options: AnalysisOptions) -> ScanResult:
                             pass
                         subdirs.append(Path(entry.path))
                 elif entry.is_file(follow_symlinks=False):
+                    resolved_entry = Path(entry.path).resolve(strict=False)
+                    if resolved_entry in exact_exclusions:
+                        continue
                     if _excluded(rel, False, patterns):
                         diagnostics.append(AnalysisDiagnostic("scan", rel, "Excluded", "file excluded by scanner rules"))
                         continue
@@ -125,15 +152,27 @@ def scan_repository(options: AnalysisOptions) -> ScanResult:
                         else:
                             with open(entry.path, "rb") as stream:
                                 data = stream.read()
+                            if Path(rel).suffix.lower() == ".json" and _is_projectlens_result(data):
+                                diagnostics.append(AnalysisDiagnostic("scan", rel, "Excluded", "ProjectLens result JSON excluded"))
+                                continue
                             status = "scanned"
                             loc = len(data.splitlines())
                     except OSError as exc:
                         status, loc = "unreadable", None
-                        diagnostics.append(AnalysisDiagnostic("scan", rel, "UnreadableFile", str(exc)))
+                        diagnostics.append(AnalysisDiagnostic("scan", rel, "UnreadableFile", _os_error_message(exc)))
                     files.append(FileRecord(rel, language, _classify(rel, language), loc, status))
             except OSError as exc:
-                diagnostics.append(AnalysisDiagnostic("scan", rel, "ScanEntryError", str(exc)))
+                diagnostics.append(AnalysisDiagnostic("scan", rel, "ScanEntryError", _os_error_message(exc)))
         pending.extend(reversed(subdirs))
     files.sort(key=lambda item: item.path)
     diagnostics.sort(key=lambda item: (item.file or "", item.error_type, item.message))
     return ScanResult(tuple(files), tuple(diagnostics))
+
+
+def _is_projectlens_result(data: bytes) -> bool:
+    """Recognize a ProjectLens export by its stable top-level format marker."""
+    try:
+        value = json.loads(data)
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError):
+        return False
+    return isinstance(value, dict) and value.get(RESULT_MARKER_KEY) == RESULT_MARKER_VALUE

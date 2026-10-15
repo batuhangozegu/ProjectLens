@@ -56,17 +56,17 @@ Kabul: Uygulama kodu olmadan, uygulanacak yapı ve ilk milestone sınırları ok
 - [x] Kontrollü fixture repository üzerinden beklenen sonuçları test et.
 - [x] Doğrula ve commit at.
 
-### 1.6 — CLI çıktısı ve milestone kabulü (sıradaki adım)
+### 1.6 — CLI çıktısı ve milestone kabulü
 
-- [ ] Okunabilir terminal özeti ve --output JSON export ekle.
-- [ ] Geçersiz path, yazılamayan output ve kısmi analiz için çıkış kodlarını belgele/test et.
-- [ ] Tekrarlanan analizlerde kararlı ölçüm/sıralama doğrula.
-- [ ] JSON çıktısının sonraki analizde girdi sayılmasını önleyecek davranışı belirle/test et.
-- [ ] CLI integration testlerini tamamla; pytest çalıştır.
-- [ ] README'ye gerçek çıktı örneği, sınırlamalar ve kullanım ekle.
-- [ ] Doğrula ve milestone commit'i at.
+- [x] Okunabilir terminal özeti ve --output JSON export ekle.
+- [x] Geçersiz path, yazılamayan output ve kısmi analiz için çıkış kodlarını belgele/test et.
+- [x] Tekrarlanan analizlerde kararlı ölçüm/sıralama doğrula.
+- [x] JSON çıktısının sonraki analizde girdi sayılmasını önleyecek davranışı belirle/test et.
+- [x] CLI integration testlerini tamamla; pytest çalıştır.
+- [x] README'ye gerçek çıktı örneği, sınırlamalar ve kullanım ekle.
+- [x] Doğrula ve milestone commit'i at.
 
-Kabul komutları (henüz uygulanmadı):
+Kabul komutları:
 
 ```bash
 python -m projectlens analyze /path/to/python/project

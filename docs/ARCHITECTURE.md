@@ -120,6 +120,18 @@ Kenar yalnızca en özgül yerel modül dosyasına gider; ara paketlerin `__init
 
 Bilinen sınır: `ImportRecord` şu an `import x` ile `from y import z` ifadelerini ayrı işaretlemez; çözümleyici, tüm imported isimleri modül adına eşit olan absolute kaydı düz `import` sayar. Bu yüzden `from config import config` gibi, paket ile aynı adlı alt modülü olan nadir durumlarda edge alt modül yerine paketin `__init__.py` dosyasına gidebilir. Gerekirse parser kaydına `is_from` alanı eklenerek giderilir.
 
+### CLI contract (milestone 1)
+
+`python -m projectlens analyze PATH` and the installed `projectlens analyze PATH` command call the same synchronous pipeline. The CLI prints an ASCII-safe plain-text summary to stdout: root, file and Python file counts, physical and Python LOC, largest files, TODO/FIXME totals, dependency counts, cycle members, and diagnostics. The summary marks partial results explicitly. `--top N` controls largest files and `--max-diagnostics N` limits diagnostics shown in the terminal summary.
+
+`--output FILE` writes `AnalysisResult.to_json()` as UTF-8 with a trailing newline. It writes through a temporary file in the destination directory and replaces the destination only after the complete write. A fatal failure leaves no newly truncated destination file; temporary files are cleaned up when possible. The summary is printed after a successful export. The serialized result omits the root path and contains repository-relative paths only, so copies of the same tree serialize identically. No timestamps or temporary paths are serialized.
+
+Exit codes are stable: **0** means the pipeline result is complete; **1** means fatal root validation/readability or output-path/write failure, with a concise stderr message and no traceback; **2** is argparse's usage error; **3** means a result exists and was exported if requested, but `AnalysisResult.partial` is true. Partial is exactly the pipeline flag: unreadable or oversized files, parse failures/parser diagnostics, and unreadable scan entries make it true; expected exclusions and skipped symlinks do not.
+
+To prevent recursive report input, the exact `--output` path is excluded from scanning and gets a stable `Excluded` diagnostic whenever it lies under the root. Thus a first and repeated in-tree export have the same serialized analysis. Every JSON file within the configured scan size limit is also parsed as JSON and checked for the top-level `projectlens_format: projectlens-analysis` marker; marked results are skipped with an `Excluded` diagnostic. Oversized JSON files already follow the scanner's normal size-limit behavior. The marker is part of the deterministic result format and is not a timestamp or root identifier.
+
+The selected root is intentionally not serialized. This makes the result portable and byte-identical across copies, at the cost of requiring the CLI invocation or surrounding context to identify which checkout was analyzed.
+
 ### Metrics and pipeline v1
 
 The pipeline is a synchronous library function and does not depend on the CLI, HTTP, a database, or an AI provider. It selects a parser from a small in-process list by `supports(path)`. Repository files are read as bytes and decoded with the Python parser's encoding-cookie/BOM helper; repository code is never imported or executed. Root validation errors propagate as `ScanError`. Other scan, read, decode, parser, and dependency diagnostics are returned with the result in stable `(stage, path, error type, message)` order.

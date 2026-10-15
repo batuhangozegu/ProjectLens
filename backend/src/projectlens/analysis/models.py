@@ -9,6 +9,8 @@ from pathlib import PureWindowsPath
 from typing import Any
 
 SCHEMA_VERSION = "3"
+RESULT_MARKER_KEY = "projectlens_format"
+RESULT_MARKER_VALUE = "projectlens-analysis"
 
 
 def _repo_path(path: str) -> str:
@@ -24,6 +26,7 @@ class AnalysisOptions:
     root_path: str
     exclude_patterns: tuple[str, ...] = ()
     max_file_size_bytes: int = 1_000_000
+    excluded_paths: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -116,6 +119,7 @@ class AnalysisResult:
     def to_dict(self) -> dict[str, Any]:
         """Return a canonical JSON-compatible structure with stable collection ordering."""
         value = asdict(self)
+        value[RESULT_MARKER_KEY] = RESULT_MARKER_VALUE
         value["files"] = [asdict(item) for item in sorted(self.files, key=lambda item: item.path)]
         value["dependency_edges"] = [
             asdict(item)
