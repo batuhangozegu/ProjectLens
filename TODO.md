@@ -89,10 +89,10 @@ Kararlar: PostgreSQL 18 yerelde kurulu; bağlantı bilgisi `DATABASE_URL` ile or
 
 ### 2.2 — Project ve AnalysisSnapshot persistence
 
-- [ ] Project ve AnalysisSnapshot modellerini (commit/branch kimliğine bağlı) tanımla; ORM modelleri çekirdek modellerden ayrı kalır.
-- [ ] SQLAlchemy 2.x + Alembic migration kur; `DATABASE_URL` yapılandırması ekle.
-- [ ] Repository katmanı: snapshot'ı AnalysisResult JSON'u olarak sakla ve oku.
-- [ ] SQLite ile testler; doğrula ve commit at.
+- [x] Project ve AnalysisSnapshot modellerini (commit/branch kimliğine bağlı) tanımla; ORM modelleri çekirdek modellerden ayrı kalır.
+- [x] SQLAlchemy 2.x + Alembic migration kur; `DATABASE_URL` yapılandırması ekle.
+- [x] Repository katmanı: snapshot'ı AnalysisResult JSON'u olarak sakla ve oku.
+- [x] SQLite ile testler; doğrula ve commit at.
 
 ### 2.3 — FastAPI uçları
 

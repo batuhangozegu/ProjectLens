@@ -11,6 +11,7 @@ dependencies = ["networkx>=3.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
+app = ["sqlalchemy>=2.0", "alembic", "psycopg[binary]>=3.1"]
 
 [project.scripts]
 projectlens = "projectlens.cli:main"
