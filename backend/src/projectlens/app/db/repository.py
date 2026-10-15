@@ -10,8 +10,10 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .models import AnalysisJob, AnalysisSnapshot, Project, Task
+from .models import AcceptanceCriterion, AnalysisJob, AnalysisSnapshot, Project, Task, TaskFileLink
 from .task_status import validate_transition
+from projectlens.app.path_validation import normalize_task_path
+from projectlens.app.criteria_validation import validate_criterion_params
 
 
 class ProjectNotFoundError(LookupError):
@@ -24,6 +26,126 @@ class DuplicateSnapshotError(ValueError):
 
 class TaskNotFoundError(LookupError):
     """Raised when a task is absent or does not belong to the requested project."""
+
+
+class TaskItemNotFoundError(LookupError):
+    """Raised when an item is absent from the scoped task."""
+
+
+class TaskFileLinkNotFoundError(TaskItemNotFoundError):
+    pass
+
+
+class AcceptanceCriterionNotFoundError(TaskItemNotFoundError):
+    pass
+
+
+class ResourceLimitError(ValueError):
+    def __init__(self, resource: str):
+        self.resource = resource
+        super().__init__(f"task {resource} limit reached")
+
+
+class DuplicateLinkError(ValueError):
+    pass
+
+
+def _enforce_item_limit(session: Session, model, task_id: int, resource: str) -> None:
+    count = session.scalar(select(func.count()).select_from(model).where(model.task_id == task_id)) or 0
+    if count >= 50:
+        raise ResourceLimitError(resource)
+
+
+def _lock_task(session: Session, project_id: int, task_id: int) -> Task:
+    task = get_task(session, project_id, task_id)
+    # Serialize per-task inserts on PostgreSQL so concurrent writers cannot
+    # pass the bounded-item check together; SQLite ignores FOR UPDATE.
+    return session.scalar(select(Task).where(Task.id == task.id).with_for_update()) or task
+
+
+def create_task_file_link(session: Session, project_id: int, task_id: int, path: str) -> TaskFileLink:
+    task = _lock_task(session, project_id, task_id)
+    normalized = normalize_task_path(path)
+    if session.scalar(select(TaskFileLink.id).where(TaskFileLink.task_id == task.id, TaskFileLink.path == normalized)) is not None:
+        raise DuplicateLinkError("duplicate task file link")
+    _enforce_item_limit(session, TaskFileLink, task.id, "links")
+    item = TaskFileLink(task_id=task.id, path=normalized)
+    session.add(item); session.flush()
+    return item
+
+
+def list_task_file_links(session: Session, project_id: int, task_id: int) -> list[TaskFileLink]:
+    task = get_task(session, project_id, task_id)
+    return list(session.scalars(select(TaskFileLink).where(TaskFileLink.task_id == task.id).order_by(TaskFileLink.id)))
+
+
+def get_task_file_link(session: Session, project_id: int, task_id: int, link_id: int) -> TaskFileLink:
+    task = get_task(session, project_id, task_id)
+    item = session.scalar(select(TaskFileLink).where(TaskFileLink.id == link_id, TaskFileLink.task_id == task.id))
+    if item is None:
+        raise TaskFileLinkNotFoundError("task file link not found")
+    return item
+
+
+def delete_task_file_link(session: Session, project_id: int, task_id: int, link_id: int) -> None:
+    item = get_task_file_link(session, project_id, task_id, link_id)
+    session.delete(item); session.flush()
+
+
+def create_acceptance_criterion(session: Session, project_id: int, task_id: int, *, kind: str,
+                                params: dict, description: str = "", attested: bool | None = None,
+                                position: int | None = None) -> AcceptanceCriterion:
+    task = _lock_task(session, project_id, task_id)
+    normalized = validate_criterion_params(kind, params)
+    if kind != "manual_attestation" and attested is not None:
+        raise ValueError("attested is allowed only for manual_attestation criteria")
+    if attested is not None and type(attested) is not bool:
+        raise ValueError("attested must be a boolean or null")
+    _enforce_item_limit(session, AcceptanceCriterion, task.id, "criteria")
+    if position is None:
+        maximum = session.scalar(select(func.max(AcceptanceCriterion.position)).where(AcceptanceCriterion.task_id == task.id))
+        position = 0 if maximum is None else maximum + 1
+    item = AcceptanceCriterion(task_id=task.id, kind=kind, params=normalized, description=description,
+                               attested=attested, position=position)
+    session.add(item); session.flush()
+    return item
+
+
+def list_acceptance_criteria(session: Session, project_id: int, task_id: int) -> list[AcceptanceCriterion]:
+    task = get_task(session, project_id, task_id)
+    return list(session.scalars(select(AcceptanceCriterion).where(AcceptanceCriterion.task_id == task.id)
+                                .order_by(AcceptanceCriterion.position, AcceptanceCriterion.id)))
+
+
+def get_acceptance_criterion(session: Session, project_id: int, task_id: int, criterion_id: int) -> AcceptanceCriterion:
+    task = get_task(session, project_id, task_id)
+    item = session.scalar(select(AcceptanceCriterion).where(AcceptanceCriterion.id == criterion_id,
+                            AcceptanceCriterion.task_id == task.id))
+    if item is None:
+        raise AcceptanceCriterionNotFoundError("acceptance criterion not found")
+    return item
+
+
+def update_acceptance_criterion(session: Session, project_id: int, task_id: int, criterion_id: int,
+                                changes: dict) -> AcceptanceCriterion:
+    item = get_acceptance_criterion(session, project_id, task_id, criterion_id)
+    if "kind" in changes:
+        raise ValueError("criterion kind is immutable")
+    if "params" in changes:
+        changes = dict(changes)
+        changes["params"] = validate_criterion_params(item.kind, changes["params"])
+    if "attested" in changes and item.kind != "manual_attestation":
+        raise ValueError("attested is allowed only for manual_attestation criteria")
+    if "attested" in changes and changes["attested"] is not None and type(changes["attested"]) is not bool:
+        raise ValueError("attested must be a boolean or null")
+    for key, value in changes.items():
+        setattr(item, key, value)
+    session.flush()
+    return item
+
+
+def delete_acceptance_criterion(session: Session, project_id: int, task_id: int, criterion_id: int) -> None:
+    session.delete(get_acceptance_criterion(session, project_id, task_id, criterion_id)); session.flush()
 
 
 def _slugify(name: str) -> str:

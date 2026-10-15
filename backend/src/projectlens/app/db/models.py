@@ -53,6 +53,18 @@ class UTCDateTime(TypeDecorator):
         return value.astimezone(timezone.utc)
 
 
+class JSONObject(TypeDecorator):
+    """JSON storage that keeps criterion params as objects on every dialect."""
+
+    impl = JSON
+    cache_ok = True
+
+    def process_bind_param(self, value, _dialect):
+        if value is not None and not isinstance(value, dict):
+            raise ValueError("JSON value must be an object")
+        return value
+
+
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
@@ -158,3 +170,42 @@ class Task(Base):
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, server_default=func.now(), onupdate=func.now())
     completed_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
     project: Mapped[Project] = relationship(back_populates="tasks")
+    file_links: Mapped[list[TaskFileLink]] = relationship(back_populates="task", cascade="all, delete-orphan", passive_deletes=True)
+    acceptance_criteria: Mapped[list[AcceptanceCriterion]] = relationship(back_populates="task", cascade="all, delete-orphan", passive_deletes=True)
+
+
+class TaskFileLink(Base):
+    __tablename__ = "task_file_links"
+    __table_args__ = (
+        CheckConstraint("length(path) BETWEEN 1 AND 500", name="task_file_link_path_length"),
+        UniqueConstraint("task_id", "path", name="uq_task_file_link_task_path"),
+        Index("ix_task_file_links_task_id", "task_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    path: Mapped[str] = mapped_column(String(500), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, server_default=func.now())
+    task: Mapped[Task] = relationship(back_populates="file_links")
+
+
+class AcceptanceCriterion(Base):
+    __tablename__ = "acceptance_criteria"
+    __table_args__ = (
+        CheckConstraint("kind IN ('file_exists', 'path_has_files', 'import_edge_exists', 'not_in_cycle', 'max_todo_markers', 'no_analysis_failures', 'manual_attestation')", name="acceptance_criterion_kind_valid"),
+        CheckConstraint("length(description) <= 500", name="acceptance_criterion_description_length"),
+        CheckConstraint("kind = 'manual_attestation' OR attested IS NULL", name="acceptance_criterion_attested_kind"),
+        CheckConstraint("position >= 0", name="acceptance_criterion_position_nonnegative"),
+        Index("ix_acceptance_criteria_task_id", "task_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    params: Mapped[dict] = mapped_column(JSONObject(), nullable=False, default=dict)
+    description: Mapped[str] = mapped_column(String(500), nullable=False, default="", server_default="")
+    attested: Mapped[bool | None] = mapped_column(nullable=True)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, server_default=func.now(), onupdate=func.now())
+    task: Mapped[Task] = relationship(back_populates="acceptance_criteria")
