@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .models import AnalysisJob, AnalysisSnapshot, Project
+from .models import AnalysisJob, AnalysisSnapshot, Project, Task
+from .task_status import validate_transition
 
 
 class ProjectNotFoundError(LookupError):
@@ -18,6 +20,10 @@ class ProjectNotFoundError(LookupError):
 
 class DuplicateSnapshotError(ValueError):
     """Raised when a project already has this commit/schema snapshot."""
+
+
+class TaskNotFoundError(LookupError):
+    """Raised when a task is absent or does not belong to the requested project."""
 
 
 def _slugify(name: str) -> str:
@@ -211,3 +217,75 @@ def list_snapshots(session: Session, project: Project | int) -> list[AnalysisSna
 def get_snapshot(session: Session, snapshot_id: int) -> dict[str, Any] | None:
     snapshot = session.get(AnalysisSnapshot, snapshot_id)
     return None if snapshot is None else snapshot.result_json
+
+
+def create_task(session: Session, project_id: int, *, title: str, description: str | None = None,
+                status: str = "TODO", priority: str = "MEDIUM", category: str | None = None,
+                position: int | None = None, source: str = "manual", source_key: str | None = None) -> Task:
+    if session.get(Project, project_id) is None:
+        raise ProjectNotFoundError(f"project {project_id!r} does not exist")
+    if category is not None:
+        category = category.strip() or None
+    if position is None:
+        max_position = session.scalar(select(func.max(Task.position)).where(Task.project_id == project_id))
+        position = 0 if max_position is None else max_position + 1
+    task = Task(project_id=project_id, title=title, description=description, status=status, priority=priority,
+                category=category, position=position, source=source, source_key=source_key,
+                completed_at=datetime.now(timezone.utc) if status == "DONE" else None)
+    session.add(task)
+    session.flush()
+    return task
+
+
+def get_task(session: Session, project_id: int, task_id: int) -> Task:
+    task = session.scalar(select(Task).where(Task.project_id == project_id, Task.id == task_id))
+    if task is None:
+        if session.get(Project, project_id) is None:
+            raise ProjectNotFoundError(f"project {project_id!r} does not exist")
+        raise TaskNotFoundError(f"task {task_id!r} does not exist in project {project_id!r}")
+    return task
+
+
+def list_tasks(session: Session, project_id: int, *, status: list[str] | None = None,
+               priority: str | None = None, category: str | None = None, search: str | None = None,
+               limit: int = 20, offset: int = 0) -> tuple[list[Task], int]:
+    if session.get(Project, project_id) is None:
+        raise ProjectNotFoundError(f"project {project_id!r} does not exist")
+    if not 1 <= limit <= 100 or not 0 <= offset <= 10000:
+        raise ValueError("limit must be 1..100 and offset must be 0..10000")
+    query = select(Task).where(Task.project_id == project_id)
+    if status:
+        query = query.where(Task.status.in_(status))
+    if priority:
+        query = query.where(Task.priority == priority)
+    if category:
+        query = query.where(Task.category == category.strip())
+    if search:
+        query = query.where(Task.title.ilike(f"%{search}%"))
+    total = session.scalar(select(func.count()).select_from(query.subquery())) or 0
+    items = list(session.scalars(query.order_by(Task.position, Task.id).offset(offset).limit(limit)))
+    return items, total
+
+
+def update_task(session: Session, project_id: int, task_id: int, changes: dict[str, Any]) -> Task:
+    task = get_task(session, project_id, task_id)
+    if "status" in changes:
+        next_status = changes["status"]
+        validate_transition(task.status, next_status)
+        if next_status != task.status:
+            now = datetime.now(timezone.utc)
+            task.completed_at = now if next_status == "DONE" else None
+            task.status = next_status
+    for key in ("title", "description", "priority", "category", "position"):
+        if key in changes:
+            value = changes[key]
+            if key == "category" and value is not None:
+                value = value.strip() or None
+            setattr(task, key, value)
+    session.flush()
+    return task
+
+
+def delete_task(session: Session, project_id: int, task_id: int) -> None:
+    session.delete(get_task(session, project_id, task_id))
+    session.flush()
