@@ -115,3 +115,55 @@ class SnapshotList(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     database: Literal["ok", "unavailable"]
+
+
+TaskStatus = Literal["TODO", "IN_PROGRESS", "DONE", "BLOCKED"]
+TaskPriority = Literal["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+
+
+class TaskCreate(BaseModel):
+    model_config = {"extra": "forbid"}
+    title: str = Field(min_length=1, max_length=200)
+    description: str | None = Field(default=None, max_length=4000)
+    status: TaskStatus = "TODO"
+    priority: TaskPriority = "MEDIUM"
+    category: str | None = Field(default=None, max_length=80)
+
+
+class TaskPatch(BaseModel):
+    model_config = {"extra": "forbid"}
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    description: str | None = Field(default=None, max_length=4000)
+    status: TaskStatus | None = None
+    priority: TaskPriority | None = None
+    category: str | None = Field(default=None, max_length=80)
+
+    @model_validator(mode="after")
+    def nonnullable_fields_are_not_null(self):
+        for field in ("title", "status", "priority"):
+            if field in self.model_fields_set and getattr(self, field) is None:
+                raise ValueError(f"{field} cannot be null")
+        return self
+
+
+class TaskResponse(BaseModel):
+    id: int
+    project_id: int
+    title: str
+    description: str | None
+    status: TaskStatus
+    priority: TaskPriority
+    category: str | None
+    position: int
+    source: Literal["manual", "import"]
+    source_key: str | None
+    created_at: datetime
+    updated_at: datetime
+    completed_at: datetime | None
+
+
+class TaskList(BaseModel):
+    items: list[TaskResponse]
+    total: int
+    limit: int
+    offset: int

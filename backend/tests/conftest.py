@@ -45,9 +45,9 @@ def test_database(request, tmp_path):
     def clear_schema():
         sqlalchemy = __import__("sqlalchemy")
         metadata = sqlalchemy.MetaData()
-        metadata.reflect(bind=engine, only=lambda _name, _metadata: _name in {
-            "projects", "analysis_snapshots", "analysis_jobs", "alembic_version"
-        })
+        # Safe to reflect everything: the target is a temp SQLite file or a PostgreSQL
+        # database whose name was already verified to end with "_test".
+        metadata.reflect(bind=engine)
         metadata.drop_all(bind=engine)
 
     clear_schema()

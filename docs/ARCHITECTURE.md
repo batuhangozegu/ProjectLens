@@ -187,3 +187,31 @@ neither image build nor `docker compose up` was run. What has been verified is
 that migrations 0001 and 0002 ran on local PostgreSQL 18 and a real end-to-end
 API flow (public repository clone, analysis, snapshot persistence) completed
 on that database.
+
+### Project tasks (milestone 3.1)
+
+Tasks are persisted as `app.db.models.Task`, separate from analyzer core
+dataclasses, and belong to a project with cascade deletion. A task stores a
+1–200 character title, optional description up to 4,000 characters, status,
+priority, optional trimmed category, stable per-project position, source and
+optional source key, plus UTC creation/update/completion timestamps. Statuses
+are `TODO`, `IN_PROGRESS`, `DONE`, and `BLOCKED`; priorities are `LOW`,
+`MEDIUM`, `HIGH`, and `CRITICAL`. Sources are `manual` and reserved `import`.
+The nullable `(project_id, source_key)` uniqueness supports later idempotent
+TODO.md imports. Listing is ordered by position then ID and caps page size at
+100 and offset at 10,000.
+
+Status changes follow a pure transition table: `TODO` can move to `IN_PROGRESS`,
+`DONE`, or `BLOCKED`; `IN_PROGRESS` can move to `TODO`, `DONE`, or `BLOCKED`;
+`BLOCKED` can move to `TODO` or `IN_PROGRESS`; `DONE` can reopen to `TODO` or
+`IN_PROGRESS`. Repeating the current status is an accepted idempotent no-op.
+Entering `DONE` sets `completed_at`; leaving it clears that timestamp.
+
+The `/api/v1/projects/{id}/tasks` endpoints create (201), list, read, partially
+update, and delete (204) project-scoped tasks. List filters support one or more
+statuses, priority, category, and title search. Invalid request values return
+the standard validation envelope (`422`, `validation_error`); invalid status
+edges return `409`, `invalid_status_transition`; missing projects or tasks
+return scoped `404` errors. Unknown PATCH fields are rejected. Migration
+`0003_project_tasks` adds the task table, portable checks, indexes, and cascade
+foreign key.

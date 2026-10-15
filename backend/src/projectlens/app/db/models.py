@@ -77,6 +77,7 @@ class Project(Base):
     snapshots: Mapped[list[AnalysisSnapshot]] = relationship(
         back_populates="project", cascade="all, delete-orphan", passive_deletes=True
     )
+    tasks: Mapped[list[Task]] = relationship(back_populates="project", cascade="all, delete-orphan", passive_deletes=True)
 
 
 class AnalysisSnapshot(Base):
@@ -126,3 +127,34 @@ class AnalysisJob(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, server_default=func.now())
     started_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class Task(Base):
+    __tablename__ = "tasks"
+    __table_args__ = (
+        CheckConstraint("length(title) BETWEEN 1 AND 200", name="task_title_length"),
+        CheckConstraint("description IS NULL OR length(description) <= 4000", name="task_description_length"),
+        CheckConstraint("status IN ('TODO', 'IN_PROGRESS', 'DONE', 'BLOCKED')", name="task_status_valid"),
+        CheckConstraint("priority IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')", name="task_priority_valid"),
+        CheckConstraint("source IN ('manual', 'import')", name="task_source_valid"),
+        CheckConstraint("category IS NULL OR (length(category) BETWEEN 1 AND 80 AND category = trim(category))", name="task_category_valid"),
+        CheckConstraint("position >= 0", name="task_position_nonnegative"),
+        UniqueConstraint("project_id", "source_key", name="uq_task_project_source_key"),
+        Index("ix_tasks_project_status", "project_id", "status"),
+        Index("ix_tasks_project_priority", "project_id", "priority"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(4000), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="TODO", server_default="TODO")
+    priority: Mapped[str] = mapped_column(String(16), nullable=False, default="MEDIUM", server_default="MEDIUM")
+    category: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    source: Mapped[str] = mapped_column(String(16), nullable=False, default="manual", server_default="manual")
+    source_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, server_default=func.now(), onupdate=func.now())
+    completed_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    project: Mapped[Project] = relationship(back_populates="tasks")
