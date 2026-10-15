@@ -141,11 +141,26 @@ Kararlar: Task durumları `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. Manuel durum
 
 ## 4 — Code-aware tracking (backend)
 
-- [ ] Task'ları snapshot içindeki dosya/modüllerle ilişkilendir.
-- [ ] Task kabul kriterleri ve kullanıcı tarafından tanımlanan kontrol kanıtlarını modelle.
-- [ ] Manuel durumdan ayrı, gerekçeli ilerleme tahmini üret.
-- [ ] Eksik/yetersiz kanıtta belirsizliği göster; dosya varlığını tamamlanma sayma.
-- [ ] API, test ve belgeleri tamamla; adım adım commit at.
+Tasarım `docs/ARCHITECTURE.md` içindeki "Code-aware tracking tasarımı" bölümündedir. Özet: task'lar yola bağlı dosya/dizin bağlantıları (snapshot'tan bağımsız) ve kabul kriterleri taşır; kriterler yalnızca saklanan AnalysisResult JSON'undan değerlendirilir; ilerleme tahmini manuel durumdan ayrıdır, gerekçe ve belirsizlik içerir; bağlı dosyanın varlığı tek başına tamamlanma kanıtı sayılmaz. Değerlendirme saf mantıktır (`projectlens/tracking/`), DB/API `projectlens/app/` altındadır.
+
+### 4.1 — Kanıt değerlendirme motoru (saf mantık, sıradaki adım)
+
+- [ ] Kriter türlerini ve snapshot JSON'undan değerlendirmeyi uygula (met / unmet / unknown).
+- [ ] Gerekçeli, belirsizliği gösteren ilerleme tahmin formülünü uygula; bağlantı varlığı ağırlıksızdır.
+- [ ] Manuel durumla sapma (divergence) göstergesi; eksik/yetersiz kanıtta null tahmin.
+- [ ] Kapsamlı testler; doğrula ve commit at.
+
+### 4.2 — Bağlantı ve kriter persistence + CRUD API
+
+- [ ] TaskFileLink ve AcceptanceCriterion modelleri, migration 0004, repository.
+- [ ] `/projects/{id}/tasks/{task_id}/links` ve `/criteria` CRUD uçları (yol doğrulama, sınırlar).
+- [ ] SQLite + PostgreSQL testleri; doğrula ve commit at.
+
+### 4.3 — Değerlendirme uçları
+
+- [ ] `GET /projects/{id}/tasks/{task_id}/assessment?snapshot=latest|<id>` (4.1 motoru + 4.2 verisi).
+- [ ] `GET /projects/{id}/roadmap/assessment` proje özeti (belirsizlik ve sapma sayıları dahil).
+- [ ] API testleri, belgeler; doğrula ve commit at.
 
 ## 5 — Analiz çekirdeğini genişletme
 

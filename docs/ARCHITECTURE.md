@@ -223,3 +223,33 @@ foreign key.
 Re-import matches only imported tasks by `(project, source_key)`. A new key creates a task. Unchecked items never modify existing task state; checked items move TODO or IN_PROGRESS to DONE using normal completion timestamps. A checked item matching BLOCKED is reported as a conflict. DONE remains DONE when unchecked. Existing title/category values are not rewritten, and manual-source tasks are never selected for update. Imported keys missing from a later document are reported as `missing_from_source` and remain in storage. The report includes exact counts, capped item arrays (first 200 entries per list) and per-list `truncated` flags. `dry_run: true` returns that report without writes. Each non-dry-run import is committed as one transaction; a uniqueness race causes one re-plan/retry, then a safe 409 `roadmap_import_conflict` if still unresolved. No migration is needed because the Task model already has the source/key fields and unique constraint.
 
 `GET /api/v1/projects/{id}/roadmap/progress` applies progress formula version 1 to all task sources by default; `?source=manual` or `?source=import` filters the input. The response includes overall, category, and section totals, the formula version and description, and `manual_status_only: true`. It counts DONE divided by all tasks, gives IN_PROGRESS no partial credit, and keeps BLOCKED in the denominator. Empty roadmaps return `state: "empty"` and `percent_complete: null`. The API selects only status, category, and priority columns; it does not make analysis-based estimates, which belong to milestone 4.
+
+### Code-aware tracking tasarımı (milestone 4)
+
+**Amaç:** Manuel task durumunu analiz kanıtıyla yan yana göstermek; ikisini karıştırmamak. Manuel durum (`TODO/IN_PROGRESS/DONE/BLOCKED`) kullanıcının beyanıdır. Kod-bilinçli değerlendirme ise saklanan snapshot'tan hesaplanan, gerekçeli bir *tahmin*dir ve manuel durumu asla değiştirmez.
+
+**Bağlantılar (`TaskFileLink`).** Task'a repository köküne göre `/` ayıraçlı bir yol bağlanır: tek dosya (`src/pkg/a.py`) veya dizin öneki (`src/pkg/`, sonda `/`). Bağlantı snapshot'a değil projeye aittir; yeni snapshot'larda aynı bağlantı yeniden değerlendirilir. Yollar doğrulanır (mutlak yol, `..`, ters eğik çizgi, kontrol karakteri reddedilir).
+
+**Kabul kriterleri (`AcceptanceCriterion`).** Her kriter bir tür, parametreler ve açıklama taşır. Yalnızca saklanan AnalysisResult JSON'undan değerlendirilebilen türler desteklenir:
+
+| Tür | Anlamı (snapshot verisinden) |
+| --- | --- |
+| `file_exists` | Belirtilen dosya kayıtlarda var ve okunabilir/analiz edilmiş |
+| `path_has_files` | Dizin önekinde, isteğe bağlı dil/dosya sınıfı filtresiyle, en az N dosya var |
+| `import_edge_exists` | A dosyasından B dosyasına yerel import kenarı var |
+| `not_in_cycle` | Belirtilen dosya hiçbir cycle grubunda yok |
+| `max_todo_markers` | Yol altındaki TODO/FIXME toplamı en çok N |
+| `no_analysis_failures` | Yol altında parse/okuma hatalı dosya yok |
+| `manual_attestation` | Kullanıcının kendi işaretlediği kriter (otomatik doğrulanamaz) |
+
+Sembol (fonksiyon/class) kriterleri şimdilik yoktur: sembol kayıtları saklanan sonuca dahil değildir. Gerekirse sonraki milestone'da sonuç sözleşmesi genişletilir.
+
+**Değerlendirme çıktısı.** Her kriter için `met`, `unmet` veya `unknown` sonucu ve gerekçe metni üretilir. `unknown` nedenleri: snapshot kısmi (`partial`) ve ilgili yol kapsanmıyor, dosya `skipped/unreadable`, yol snapshot'ta hiç yok ve varlığı kanıtlanamıyor, veya kriter manuel. Otomatik kanıt yoksa tahmin üretilmez.
+
+**İlerleme tahmini.** `automatic_percent = met / (met + unmet)` yalnızca otomatik kriterler üzerinden; `unknown` paydaya girmez ama güven düzeyini düşürür. `manual_attestation` kriterleri ayrı raporlanır (kullanıcı beyanı, kanıt değil) ve otomatik yüzdeye karışmaz. Hiç otomatik kriter yoksa veya hepsi `unknown` ise tahmin `null` ve `confidence = "none"`. Güven: `high` (>=3 değerlendirilen kriter, unknown yok, snapshot tam), `medium`, `low`, `none`. Bağlı dosyaların varlığı bağlam olarak listelenir ama **ağırlığı sıfırdır**; "dosya var" tamamlanma kanıtı sayılmaz (yalnızca açıkça tanımlanmış bir `file_exists` kriteri sayılır).
+
+**Sapma (divergence).** Manuel durum `DONE` iken tahmin düşükse (< %100 ve kanıt var) veya durum `TODO`/`BLOCKED` iken tahmin %100 ise bayrak konur; sistem durumu değiştirmez, yalnızca gösterir.
+
+**Belirsizlik görünürlüğü.** Yanıtlar her zaman `confidence`, `reasons[]`, `unknown_criteria[]`, `snapshot` (id, commit, partial) ve `formula_version` içerir. Snapshot yoksa 200 ile `state: "no_snapshot"` döner (hata değil).
+
+**Katmanlama.** Değerlendirme motoru `projectlens/tracking/evidence.py` içinde saf fonksiyonlardır (stdlib; düz dict/dataclass girdi). Persistence ve API `projectlens/app/` altındadır; ORM ve API şemaları motora sızmaz.
