@@ -30,15 +30,15 @@ Kabul: Uygulama kodu olmadan, uygulanacak yapı ve ilk milestone sınırları ok
 - [x] Boş klasör, erişim hatası, Windows path ve hariç tutma testleri yaz.
 - [x] Doğrula ve commit at.
 
-### 1.3 — Python parser (sıradaki adım)
+### 1.3 — Python parser
 
-- [ ] AST ile fonksiyon/class sembolleri ve import kayıtları çıkar.
-- [ ] Encoding ve syntax hatalarını dosya bazlı tanılara dönüştür.
-- [ ] Yorum token'larından TODO/FIXME say; string içeriklerini hariç tut.
-- [ ] Relative import, alias, multiline import ve hatalı dosya testleri yaz.
-- [ ] Doğrula ve commit at.
+- [x] AST ile fonksiyon/class sembolleri ve import kayıtları çıkar.
+- [x] Encoding ve syntax hatalarını dosya bazlı tanılara dönüştür.
+- [x] Yorum token'larından TODO/FIXME say; string içeriklerini hariç tut.
+- [x] Relative import, alias, multiline import ve hatalı dosya testleri yaz.
+- [x] Doğrula ve commit at.
 
-### 1.4 — Dependency graph
+### 1.4 — Dependency graph (sıradaki adım)
 
 - [ ] Yerel modül indeksini ve import çözümlemesini oluştur.
 - [ ] src düzeni, paketler, __init__.py ve relative importları ele al.

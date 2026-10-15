@@ -105,3 +105,9 @@ Change impact, PR analizi, OAuth/private repositories ve semantic search sonraki
 ### Scanner v1 scope
 
 The scanner does not read or interpret `.gitignore` in v1. It uses its built-in exclusions and any additional `AnalysisOptions.exclude_patterns`; excluded paths are reported as scan diagnostics. A later step may add `.gitignore` support. Symlink directories are not followed and symlink files are not read. Oversized and unreadable files remain listed without LOC and carry diagnostics. File classification is heuristic. File contents are read as bytes only for physical LOC counting; scanned code is never imported or executed.
+
+### Python parser v1 scope
+
+The Python parser uses only `ast` and `tokenize`; it never imports or executes repository code. Function, async function, class, and method symbols use dot-separated lexical qualified names, including nested definitions (for example `Outer.method.inner`). A function directly in a class body has kind `method`; functions nested inside functions have kind `function`. Symbol start lines include the earliest decorator line; end lines use the AST node's `end_lineno`. Import aliases are preserved in `ImportRecord.imported_names` as `name as alias`; each imported name is retained in source order. Relative levels and statement lines are recorded, including imports nested in blocks. No imports are resolved here.
+
+Only uppercase whole-word `TODO` and `FIXME` occurrences in comment tokens count. Marker strings use `KIND:line`, are ordered by line then source occurrence, and ignore string/docstring contents. If tokenization fails, comments yielded before the failure are kept and a `TokenizeError` diagnostic is added. Syntax, null-byte, resource-limit, and byte-decoding failures are represented as parse diagnostics; `decode_source` follows Python encoding cookies and UTF-8 BOM detection. Symbols and imports are sorted deterministically by source position and stable field values.
