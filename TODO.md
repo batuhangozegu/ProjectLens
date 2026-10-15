@@ -38,16 +38,16 @@ Kabul: Uygulama kodu olmadan, uygulanacak yapı ve ilk milestone sınırları ok
 - [x] Relative import, alias, multiline import ve hatalı dosya testleri yaz.
 - [x] Doğrula ve commit at.
 
-### 1.4 — Dependency graph (sıradaki adım)
+### 1.4 — Dependency graph
 
-- [ ] Yerel modül indeksini ve import çözümlemesini oluştur.
-- [ ] src düzeni, paketler, __init__.py ve relative importları ele al.
-- [ ] External, ambiguous ve çözülemeyen importları ayrı tut.
-- [ ] Dosya graph'ı, gelen/giden dependency sayıları ve cycle gruplarını üret.
-- [ ] İzole dosya, self-loop, cycle ve çözümleme testlerini yaz.
-- [ ] Doğrula ve commit at.
+- [x] Yerel modül indeksini ve import çözümlemesini oluştur.
+- [x] src düzeni, paketler, __init__.py ve relative importları ele al.
+- [x] External, ambiguous ve çözülemeyen importları ayrı tut.
+- [x] Dosya graph'ı, gelen/giden dependency sayıları ve cycle gruplarını üret.
+- [x] İzole dosya, self-loop, cycle ve çözümleme testlerini yaz.
+- [x] Doğrula ve commit at.
 
-### 1.5 — Metrikler ve pipeline
+### 1.5 — Metrikler ve pipeline (sıradaki adım)
 
 - [ ] Toplam dosya/Python dosyası sayısı, fiziksel LOC ve Python LOC hesapla.
 - [ ] En büyük dosyaları ve TODO/FIXME toplamlarını üret.

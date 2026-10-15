@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import PureWindowsPath
 from typing import Any
 
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
 
 
 def _repo_path(path: str) -> str:
@@ -91,10 +91,14 @@ class DependencyEdge:
     source: str
     target: str
     import_line: int
+    evidence_lines: tuple[int, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "source", _repo_path(self.source))
         object.__setattr__(self, "target", _repo_path(self.target))
+        lines = tuple(sorted(set(self.evidence_lines or (self.import_line,))))
+        object.__setattr__(self, "evidence_lines", lines)
+        object.__setattr__(self, "import_line", lines[0] if lines else self.import_line)
 
 
 @dataclass(frozen=True)
@@ -112,7 +116,7 @@ class AnalysisResult:
         value["files"] = [asdict(item) for item in sorted(self.files, key=lambda item: item.path)]
         value["dependency_edges"] = [
             asdict(item)
-            for item in sorted(self.dependency_edges, key=lambda item: (item.source, item.target, item.import_line))
+            for item in sorted(self.dependency_edges, key=lambda item: (item.source, item.target, item.evidence_lines))
         ]
         value["cycles"] = [
             sorted(_repo_path(path) for path in cycle)
