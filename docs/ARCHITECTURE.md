@@ -101,3 +101,7 @@ Pipeline modeller ve parser arayüzüne bağımlı olacak; CLI yalnızca giriş/
 7. Frontend: project listesi, detaylar, roadmap, graph ve diğer tamamlanmış backend özellikleri.
 
 Change impact, PR analizi, OAuth/private repositories ve semantic search sonraki backlog'da kalır. Her adım bir öncekinin çalışan sonucunu kullanır; tüm roadmap tek seferde uygulanmaz.
+
+### Scanner v1 scope
+
+The scanner does not read or interpret `.gitignore` in v1. It uses its built-in exclusions and any additional `AnalysisOptions.exclude_patterns`; excluded paths are reported as scan diagnostics. A later step may add `.gitignore` support. Symlink directories are not followed and symlink files are not read. Oversized and unreadable files remain listed without LOC and carry diagnostics. File classification is heuristic. File contents are read as bytes only for physical LOC counting; scanned code is never imported or executed.

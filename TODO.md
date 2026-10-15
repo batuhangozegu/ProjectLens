@@ -22,15 +22,15 @@ Kabul: Uygulama kodu olmadan, uygulanacak yapı ve ilk milestone sınırları ok
 - [x] Kurulum, --help ve sonuç serileştirme kontrollerini yap.
 - [x] README'ye gerçek kurulum komutlarını ekle; doğrula ve commit at.
 
-### 1.2 — Repository scanner (sıradaki adım)
+### 1.2 — Repository scanner
 
-- [ ] Kök yol doğrulaması, kararlı dosya ağacı ve dil/sınıf tespiti ekle.
-- [ ] Varsayılan hariç tutmalar, symlink politikası ve dosya boyutu sınırını uygula.
-- [ ] .gitignore desteğinin ilk sürüm kapsamını belirle ve belgele.
-- [ ] Boş klasör, erişim hatası, Windows path ve hariç tutma testleri yaz.
-- [ ] Doğrula ve commit at.
+- [x] Kök yol doğrulaması, kararlı dosya ağacı ve dil/sınıf tespiti ekle.
+- [x] Varsayılan hariç tutmalar, symlink politikası ve dosya boyutu sınırını uygula.
+- [x] .gitignore desteğinin ilk sürüm kapsamını belirle ve belgele.
+- [x] Boş klasör, erişim hatası, Windows path ve hariç tutma testleri yaz.
+- [x] Doğrula ve commit at.
 
-### 1.3 — Python parser
+### 1.3 — Python parser (sıradaki adım)
 
 - [ ] AST ile fonksiyon/class sembolleri ve import kayıtları çıkar.
 - [ ] Encoding ve syntax hatalarını dosya bazlı tanılara dönüştür.
