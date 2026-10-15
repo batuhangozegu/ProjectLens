@@ -14,15 +14,15 @@ Kabul: Uygulama kodu olmadan, uygulanacak yapı ve ilk milestone sınırları ok
 
 ## 1 — Local Python analysis engine
 
-### 1.1 — Çalıştırılabilir paket ve sonuç sözleşmesi (sıradaki adım)
+### 1.1 — Çalıştırılabilir paket ve sonuç sözleşmesi
 
-- [ ] Python alt sürümünü ve minimum bağımlılıkları belirle; pyproject.toml oluştur.
-- [ ] projectlens paketini, modül girişini ve CLI argümanlarını oluştur.
-- [ ] Dataclass modelleri, JSON şema sürümü ve parser Protocol tanımla.
-- [ ] Kurulum, --help ve sonuç serileştirme kontrollerini yap.
-- [ ] README'ye gerçek kurulum komutlarını ekle; doğrula ve commit at.
+- [x] Python alt sürümünü ve minimum bağımlılıkları belirle; pyproject.toml oluştur.
+- [x] projectlens paketini, modül girişini ve CLI argümanlarını oluştur.
+- [x] Dataclass modelleri, JSON şema sürümü ve parser Protocol tanımla.
+- [x] Kurulum, --help ve sonuç serileştirme kontrollerini yap.
+- [x] README'ye gerçek kurulum komutlarını ekle; doğrula ve commit at.
 
-### 1.2 — Repository scanner
+### 1.2 — Repository scanner (sıradaki adım)
 
 - [ ] Kök yol doğrulaması, kararlı dosya ağacı ve dil/sınıf tespiti ekle.
 - [ ] Varsayılan hariç tutmalar, symlink politikası ve dosya boyutu sınırını uygula.

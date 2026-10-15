@@ -6,7 +6,7 @@ It will measure repository structure, dependencies, code health, and development
 
 ## Current status
 
-Planning and repository structure only. No analysis engine, installable package, API, or frontend has been implemented yet.
+The installable Python package and CLI foundation are implemented. The analysis engine, API, and frontend have not been implemented yet.
 
 The first milestone is a local Python repository analyzer. GitHub integration, storage, project tracking, and AI follow in separate milestones. The frontend comes last.
 
@@ -28,9 +28,9 @@ Local repository
 
 See [architecture and directory plan](docs/ARCHITECTURE.md) and the [implementation checklist](TODO.md).
 
-## Planned CLI
+## CLI status
 
-These commands describe the milestone acceptance criteria; they do not work yet.
+The package and CLI are installable. `--help` works, but analysis is not implemented yet; `analyze` exits with an explicit not-implemented message.
 
 ```bash
 python -m projectlens analyze /path/to/python/project
@@ -41,7 +41,33 @@ An installed `projectlens` command will expose the same interface.
 
 ## Setup and Docker
 
-Installation and test commands will be added with the first executable milestone. Docker and Docker Compose setup will be documented when backend services are introduced. There are currently no runtime dependencies or containers to configure.
+Python 3.10 or newer is required. From the repository root, create and activate a virtual environment, then install the package with its test tools.
+
+PowerShell:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e "backend[dev]"
+python -m projectlens --help
+projectlens --help
+Set-Location backend
+pytest
+```
+
+POSIX shell:
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e 'backend[dev]'
+python -m projectlens --help
+projectlens --help
+cd backend
+pytest
+```
+
+The package has no runtime dependencies; `pytest` is installed only by the `dev` extra. Repository analysis is not implemented yet. Docker and Docker Compose setup will be documented when backend services are introduced.
 
 ## Screenshots
 

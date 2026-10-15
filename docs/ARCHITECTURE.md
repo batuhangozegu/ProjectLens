@@ -2,7 +2,7 @@
 
 ## Kapsam ve yaklaşım
 
-Önce çalışan, test edilmiş bir local Python analiz motoru kurulacak. Bu ilk hazırlık adımında uygulama kodu yazılmayacak. Backend, takip sistemi ve AI katmanı çekirdeğin üzerine ayrı adımlarla eklenecek. Frontend en son yapılacak.
+Önce çalışan, test edilmiş bir local Python analiz motoru kurulacak. 1.1 adımında çalıştırılabilir paket, CLI temeli, veri modelleri ve parser arayüzü oluşturulur; tarama ve analiz henüz uygulanmamıştır. Backend, takip sistemi ve AI katmanı çekirdeğin üzerine ayrı adımlarla eklenecek. Frontend en son yapılacak.
 
 Başlangıç mimarisi modüler bir Python paketi olacak. Mikroservis, plugin registry, event bus veya worker altyapısı gerekmiyor. CLI ve ileride API, aynı analiz pipeline'ını çağıracak. Analiz çekirdeği FastAPI, SQLAlchemy veya herhangi bir AI sağlayıcısını import etmeyecek.
 
@@ -10,7 +10,7 @@ Proje adı **ProjectLens**, Python paketi ve komut adı **projectlens** olacak.
 
 ## Dosya yapısı
 
-Şu anda yalnızca README, TODO, mimari belgesi, ignore kuralları ve boş kaynak/test dizinleri oluşturulur. Aşağıdaki Python dosyaları ve alt modüller, ilgili TODO adımında eklenecek tasarımdır; henüz uygulanmış değildir.
+Paketleme ayarları, CLI temeli, analiz veri modelleri ve parser Protocol'ü aşağıdaki yapıda oluşturulmuştur. Tarayıcı, somut dil parser'ı, pipeline, graph ve metrik modülleri ilgili sonraki TODO adımlarında eklenecektir.
 
 ```text
 ProjectLens/
