@@ -253,3 +253,7 @@ Sembol (fonksiyon/class) kriterleri şimdilik yoktur: sembol kayıtları saklana
 **Belirsizlik görünürlüğü.** Yanıtlar her zaman `confidence`, `reasons[]`, `unknown_criteria[]`, `snapshot` (id, commit, partial) ve `formula_version` içerir. Snapshot yoksa 200 ile `state: "no_snapshot"` döner (hata değil).
 
 **Katmanlama.** Değerlendirme motoru `projectlens/tracking/evidence.py` içinde saf fonksiyonlardır (stdlib; düz dict/dataclass girdi). Persistence ve API `projectlens/app/` altındadır; ORM ve API şemaları motora sızmaz.
+
+### Task links and acceptance criteria (milestone 4.2)
+
+`TaskFileLink` and `AcceptanceCriterion` are project-scoped through their task and cascade with task deletion. Relative paths normalize to `/` separators, are bounded to 500 characters, and reject absolute paths, drive prefixes, `..` segments, and control characters. Criterion parameters are validated per kind in the API and repository; links and criteria are each limited to 50 per task. Migration `0004_task_links_and_criteria` adds both tables and their task indexes. CRUD routes live under `/api/v1/projects/{id}/tasks/{task_id}`; criterion kind is immutable after creation.
