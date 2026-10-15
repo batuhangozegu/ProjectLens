@@ -78,14 +78,34 @@ projectlens analyze . --output analysis.json
 
 ## 2 — Public GitHub repository ve persistence
 
-- [ ] Clone/fetch için güvenli URL, timeout, disk limiti ve izolasyon kurallarını belirle.
-- [ ] Branch ve commit kimliğiyle tekrarlanabilir checkout oluştur.
-- [ ] Project ve AnalysisSnapshot modellerini ekle.
-- [ ] SQLAlchemy/PostgreSQL persistence ve migration kur.
-- [ ] FastAPI ile project oluşturma ve analiz sonuçlarını okuma uçlarını ekle.
-- [ ] Uzun analiz işlerinin yaşam döngüsü/concurrency sınırlarını belirle; gerekirse worker ekle.
-- [ ] Docker Compose ve backend CI kontrollerini ekle.
-- [ ] Integration testleri ve setup belgelerini tamamla; adım adım commit at.
+Kararlar: PostgreSQL 18 yerelde kurulu; bağlantı bilgisi `DATABASE_URL` ile ortam değişkeninden gelir, gerçek `.env` commit edilmez. Persistence testleri SQLite ile çalışır; PostgreSQL ile doğrulama ayrı bir adımdır. Docker bu makinede kurulu değil; Compose ve CI dosyaları Docker kurulana kadar "doğrulanmadı" olarak işaretlenir. Analiz çekirdeği FastAPI/SQLAlchemy import etmez.
+
+### 2.1 — Güvenli clone/checkout (sıradaki adım)
+
+- [ ] Yalnızca public https GitHub URL'lerini kabul eden doğrulayıcı yaz (ssh, file, yerel yol, credential içeren URL, başka host reddedilir).
+- [ ] Git alt sürecini shell kullanmadan, timeout ve çıktı/disk limitiyle çalıştır; hook, submodule ve git config etkilerini kapat.
+- [ ] Branch ve commit kimliğiyle tekrarlanabilir checkout oluştur; checkout dizinini izole ve temizlenebilir tut.
+- [ ] Yerel git repository'leriyle (ağ gerektirmeyen) testler yaz; doğrula ve commit at.
+
+### 2.2 — Project ve AnalysisSnapshot persistence
+
+- [ ] Project ve AnalysisSnapshot modellerini (commit/branch kimliğine bağlı) tanımla; ORM modelleri çekirdek modellerden ayrı kalır.
+- [ ] SQLAlchemy 2.x + Alembic migration kur; `DATABASE_URL` yapılandırması ekle.
+- [ ] Repository katmanı: snapshot'ı AnalysisResult JSON'u olarak sakla ve oku.
+- [ ] SQLite ile testler; doğrula ve commit at.
+
+### 2.3 — FastAPI uçları
+
+- [ ] Project oluşturma (URL doğrulama + clone + analiz + snapshot) ve listeleme/okuma uçlarını ekle.
+- [ ] Uzun analiz işlerinin yaşam döngüsü ve concurrency sınırını belirle; gerekirse worker ekle.
+- [ ] Hata zarfı, girdi doğrulama ve API testleri; doğrula ve commit at.
+
+### 2.4 — PostgreSQL doğrulaması, Docker Compose ve CI
+
+- [ ] Yerel PostgreSQL ile migration ve testleri doğrula.
+- [ ] Dockerfile ve Docker Compose ekle (Docker kurulana kadar doğrulanmadı olarak işaretle).
+- [ ] Backend CI iş akışını ekle.
+- [ ] Setup belgelerini ve README'yi güncelle; doğrula ve commit at.
 
 ## 3 — Project tracking (backend)
 
