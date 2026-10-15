@@ -21,7 +21,7 @@ def test_migration_upgrade_and_downgrade_sqlite_file(tmp_path, monkeypatch):
     engine = create_engine(f"sqlite:///{database.as_posix()}")
     try:
         inspector = inspect(engine)
-        assert {"projects", "analysis_snapshots", "alembic_version"} <= set(inspector.get_table_names())
+        assert {"projects", "analysis_snapshots", "analysis_jobs", "alembic_version"} <= set(inspector.get_table_names())
         assert "ix_snapshot_project_created" in {
             index["name"] for index in inspector.get_indexes("analysis_snapshots")
         }

@@ -10,8 +10,8 @@ requires-python = ">=3.10"
 dependencies = ["networkx>=3.0"]
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
-app = ["sqlalchemy>=2.0", "alembic", "psycopg[binary]>=3.1"]
+dev = ["pytest>=7", "httpx>=0.24"]
+app = ["sqlalchemy>=2.0", "alembic", "psycopg[binary]>=3.1", "fastapi>=0.110", "pydantic>=2.0", "uvicorn[standard]>=0.27", "httpx>=0.24"]
 
 [project.scripts]
 projectlens = "projectlens.cli:main"

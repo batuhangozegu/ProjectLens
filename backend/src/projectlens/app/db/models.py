@@ -59,7 +59,10 @@ class Base(DeclarativeBase):
 
 class Project(Base):
     __tablename__ = "projects"
-    __table_args__ = (UniqueConstraint("slug"),)
+    __table_args__ = (
+        UniqueConstraint("slug"),
+        UniqueConstraint("canonical_repository_url", name="uq_project_canonical_repository_url"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -103,3 +106,23 @@ class AnalysisSnapshot(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, server_default=func.now())
 
     project: Mapped[Project] = relationship(back_populates="snapshots")
+
+
+class AnalysisJob(Base):
+    __tablename__ = "analysis_jobs"
+    __table_args__ = (
+        CheckConstraint("status IN ('queued', 'running', 'succeeded', 'failed')", name="job_status_valid"),
+        Index("ix_job_project_status", "project_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    branch: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    requested_commit: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="queued")
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(String(240), nullable=True)
+    snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("analysis_snapshots.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, server_default=func.now())
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)

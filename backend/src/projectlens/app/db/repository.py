@@ -9,7 +9,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .models import AnalysisSnapshot, Project
+from .models import AnalysisJob, AnalysisSnapshot, Project
 
 
 class ProjectNotFoundError(LookupError):
@@ -57,6 +57,71 @@ def get_project(session: Session, *, project_id: int | None = None, slug: str | 
 
 def list_projects(session: Session) -> list[Project]:
     return list(session.scalars(select(Project).order_by(Project.name, Project.id)))
+
+
+def get_project_by_repository(session: Session, canonical_url: str) -> Project | None:
+    return session.scalar(select(Project).where(Project.canonical_repository_url == canonical_url))
+
+
+def list_project_snapshots(session: Session, project_id: int, *, limit: int = 20, offset: int = 0) -> list[AnalysisSnapshot]:
+    return list(session.scalars(
+        select(AnalysisSnapshot).where(AnalysisSnapshot.project_id == project_id)
+        .order_by(AnalysisSnapshot.created_at.desc(), AnalysisSnapshot.id.desc())
+        .offset(offset).limit(limit)
+    ))
+
+
+def get_snapshot_for_project(session: Session, project_id: int, snapshot_id: int) -> AnalysisSnapshot | None:
+    return session.scalar(select(AnalysisSnapshot).where(
+        AnalysisSnapshot.project_id == project_id, AnalysisSnapshot.id == snapshot_id
+    ))
+
+
+def get_snapshot_record(session: Session, snapshot_id: int) -> AnalysisSnapshot | None:
+    return session.get(AnalysisSnapshot, snapshot_id)
+
+
+def get_snapshot_by_identity(session: Session, project_id: int, commit: str, schema_version: str) -> AnalysisSnapshot | None:
+    return session.scalar(select(AnalysisSnapshot).where(
+        AnalysisSnapshot.project_id == project_id,
+        AnalysisSnapshot.commit_sha == commit.lower(),
+        AnalysisSnapshot.analyzer_schema_version == schema_version,
+    ))
+
+
+def create_analysis_job(session: Session, project_id: int, *, branch: str | None, commit: str | None) -> AnalysisJob:
+    job = AnalysisJob(project_id=project_id, branch=branch, requested_commit=commit, status="queued")
+    session.add(job)
+    session.flush()
+    return job
+
+
+def get_analysis_job(session: Session, job_id: int) -> AnalysisJob | None:
+    return session.get(AnalysisJob, job_id)
+
+
+def find_active_job(session: Session, project_id: int, branch: str | None, commit: str | None) -> AnalysisJob | None:
+    query = select(AnalysisJob).where(
+        AnalysisJob.project_id == project_id,
+        AnalysisJob.status.in_(("queued", "running")),
+    )
+    if commit is not None:
+        query = query.where(AnalysisJob.requested_commit == commit.lower())
+    else:
+        query = query.where(AnalysisJob.requested_commit.is_(None), AnalysisJob.branch == branch)
+    return session.scalar(query.order_by(AnalysisJob.id.desc()).limit(1))
+
+
+def mark_orphaned_jobs_interrupted(session: Session) -> int:
+    from datetime import datetime, timezone
+    jobs = list(session.scalars(select(AnalysisJob).where(AnalysisJob.status.in_(("queued", "running")))))
+    now = datetime.now(timezone.utc)
+    for job in jobs:
+        job.status = "failed"
+        job.error_code = "interrupted"
+        job.error_message = "Analysis was interrupted by an application restart."
+        job.finished_at = now
+    return len(jobs)
 
 
 def _result_dict(result: Any) -> dict[str, Any]:

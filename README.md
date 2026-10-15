@@ -20,6 +20,29 @@ projectlens analyze . --output analysis.json
 python -m projectlens analyze . --top 5 --max-diagnostics 3
 ```
 
+## Running the API
+
+Install the optional API dependencies, set `DATABASE_URL`, apply the Alembic migrations, and run the factory with Uvicorn:
+
+```sh
+cd backend
+python -m pip install -e '.[dev,app]'
+export DATABASE_URL='sqlite:///projectlens.db'  # POSIX; set $env:DATABASE_URL on PowerShell
+alembic upgrade head
+uvicorn --factory projectlens.app.api:create_app
+```
+
+Create a project and start an analysis (replace the public GitHub URL with a repository you can access):
+
+```sh
+curl -X POST http://127.0.0.1:8000/api/v1/projects \
+  -H 'Content-Type: application/json' \
+  -d '{"repository_url":"https://github.com/OWNER/REPOSITORY","branch":"main"}'
+curl http://127.0.0.1:8000/api/v1/jobs/JOB_ID
+```
+
+The create endpoint returns immediately with project and job IDs; poll the returned `job_url` for completion. The API only accepts public HTTPS GitHub repository URLs.
+
 `--output FILE` writes the full result as UTF-8 JSON. The terminal summary is still printed. JSON is deterministic and contains repository-relative paths; the selected root path is deliberately omitted so identical trees produce identical JSON when copied elsewhere. Largest-file and diagnostic display limits affect the summary; `--top` also sets how many largest files are included in the result.
 
 ### Example output

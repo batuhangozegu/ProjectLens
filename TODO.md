@@ -94,13 +94,13 @@ Kararlar: PostgreSQL 18 yerelde kurulu; bağlantı bilgisi `DATABASE_URL` ile or
 - [x] Repository katmanı: snapshot'ı AnalysisResult JSON'u olarak sakla ve oku.
 - [x] SQLite ile testler; doğrula ve commit at.
 
-### 2.3 — FastAPI uçları (sıradaki adım)
+### 2.3 — FastAPI uçları
 
-- [ ] Project oluşturma (URL doğrulama + clone + analiz + snapshot) ve listeleme/okuma uçlarını ekle.
-- [ ] Uzun analiz işlerinin yaşam döngüsü ve concurrency sınırını belirle; gerekirse worker ekle.
-- [ ] Hata zarfı, girdi doğrulama ve API testleri; doğrula ve commit at.
+- [x] Project oluşturma (URL doğrulama + clone + analiz + snapshot) ve listeleme/okuma uçlarını ekle.
+- [x] Uzun analiz işlerinin yaşam döngüsü ve concurrency sınırını belirle; gerekirse worker ekle.
+- [x] Hata zarfı, girdi doğrulama ve API testleri; doğrula ve commit at.
 
-### 2.4 — PostgreSQL doğrulaması, Docker Compose ve CI
+### 2.4 — PostgreSQL doğrulaması, Docker Compose ve CI (sıradaki adım)
 
 - [ ] Yerel PostgreSQL ile migration ve testleri doğrula.
 - [ ] Dockerfile ve Docker Compose ekle (Docker kurulana kadar doğrulanmadı olarak işaretle).
