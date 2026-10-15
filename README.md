@@ -105,11 +105,12 @@ TEST_DATABASE_URL='postgresql+psycopg://projectlens:YOUR_LOCAL_PASSWORD@localhos
 On PowerShell, set `$env:TEST_DATABASE_URL` and `$env:PYTHONPATH` before running
 the same pytest command.
 
-## Docker Compose (unverified)
+## Docker Compose
 
-Docker is unavailable in the environment where these files were authored, so
-the image build and `docker compose up` have not been verified. The local
-PostgreSQL migrations and a real API flow have been verified separately. Copy
+The image build and `docker compose up --build` have been verified on Docker
+29.8: migrations run to head, the API reports healthy, runs as a non-root user
+with a read-only filesystem, and a real analysis (public clone, snapshot saved
+to PostgreSQL) completes inside the container. Copy
 `.env.compose.example` to the repository-root `.env`, choose a local password
 using URL-safe characters, then start the stack:
 
@@ -183,4 +184,4 @@ Expected exclusions and skipped symlinks alone do not make the pipeline result p
 
 ## Project status
 
-Milestone 1 and the GitHub, persistence, and API portions of milestone 2 are implemented. The PostgreSQL test pass, Docker Compose deployment, and CI workflow are documented in step 2.4; Docker files have not been run locally. The roadmap for remaining work is in [TODO.md](TODO.md). See [architecture](docs/ARCHITECTURE.md) for analysis and API contracts.
+Milestone 1 and the GitHub, persistence, and API portions of milestone 2 are implemented. The PostgreSQL test pass, Docker Compose deployment, and CI workflow are documented in step 2.4; Docker Compose has been run and verified locally. The roadmap for remaining work is in [TODO.md](TODO.md). See [architecture](docs/ARCHITECTURE.md) for analysis and API contracts.

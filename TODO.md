@@ -78,7 +78,7 @@ projectlens analyze . --output analysis.json
 
 ## 2 — Public GitHub repository ve persistence
 
-Kararlar: PostgreSQL 18 yerelde kurulu; bağlantı bilgisi `DATABASE_URL` ile ortam değişkeninden gelir, gerçek `.env` commit edilmez. Persistence testleri SQLite ile çalışır; PostgreSQL ile doğrulama ayrı bir adımdır. Docker bu makinede kurulu değil; Compose ve CI dosyaları Docker kurulana kadar "doğrulanmadı" olarak işaretlenir. Analiz çekirdeği FastAPI/SQLAlchemy import etmez.
+Kararlar: PostgreSQL 18 yerelde kurulu; bağlantı bilgisi `DATABASE_URL` ile ortam değişkeninden gelir, gerçek `.env` commit edilmez. Persistence testleri SQLite ile çalışır; PostgreSQL ile doğrulama ayrı bir adımdır. Docker sonradan kuruldu ve Compose doğrulandı; GitHub Actions iş akışı henüz çalıştırılmadı. Analiz çekirdeği FastAPI/SQLAlchemy import etmez.
 
 ### 2.1 — Güvenli clone/checkout
 
@@ -103,12 +103,12 @@ Kararlar: PostgreSQL 18 yerelde kurulu; bağlantı bilgisi `DATABASE_URL` ile or
 ### 2.4 — PostgreSQL doğrulaması, Docker Compose ve CI
 
 - [x] Yerel PostgreSQL ile migration ve testleri doğrula.
-- [x] Dockerfile ve Docker Compose ekle (yazıldı; Docker kurulu olmadığı için build/up doğrulanmadı — bkz. aşağıdaki not).
+- [x] Dockerfile ve Docker Compose ekle (build ve up Docker 29.8 ile doğrulandı — bkz. aşağıdaki not).
 - [x] Backend CI iş akışını ekle.
 - [x] Setup belgelerini ve README'yi güncelle; doğrula ve commit at.
 
 
-Not: PostgreSQL 18 üzerinde migration, gerçek uçtan uca API akışı ve tüm testler (140) doğrulandı. Dockerfile/Compose ve GitHub Actions çalıştırılmadı; YAML sözdizimi ayrıştırıldı. Docker kurulunca `docker compose build` ve `up` ayrıca denenecek.
+Not: PostgreSQL 18 üzerinde migration, gerçek uçtan uca API akışı ve tüm testler (140) doğrulandı. `docker compose up --build` doğrulandı (migration, healthcheck, non-root, read-only FS, konteynerde gerçek analiz). GitHub Actions çalıştırılmadı; YAML sözdizimi ayrıştırıldı.
 
 ## 3 — Project tracking (backend)
 

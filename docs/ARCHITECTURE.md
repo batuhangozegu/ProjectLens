@@ -181,12 +181,11 @@ without publishing an image.
 Compose topology is PostgreSQL with a named volume and readiness probe, a
 one-shot Alembic migration service, then the API after successful migration.
 The API port binds to loopback, runs read-only with a temporary filesystem for
-repository checkouts, and runs as a non-root user in the image. Compose and
-Docker files are **unverified**: Docker was not available to the author, so
-neither image build nor `docker compose up` was run. What has been verified is
-that migrations 0001 and 0002 ran on local PostgreSQL 18 and a real end-to-end
-API flow (public repository clone, analysis, snapshot persistence) completed
-on that database.
+repository checkouts, and runs as a non-root user in the image. The Compose stack is **verified**: `docker compose up --build` on Docker 29.8
+ran every migration to head, the API container became healthy, ran as uid
+10001 with a read-only root filesystem, and a real end-to-end flow (public
+repository clone, analysis, snapshot persistence) completed in the container
+against PostgreSQL 18. The GitHub Actions workflow itself has not been run.
 
 ### Project tasks (milestone 3.1)
 
