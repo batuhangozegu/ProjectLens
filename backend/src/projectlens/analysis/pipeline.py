@@ -8,6 +8,7 @@ from pathlib import Path
 from .dependency import DependencyGraphResult, build_dependency_graph
 from .dependency_dart import build_dart_dependency_graph, read_pubspec_name
 from .frameworks import detect_frameworks
+from .health import compute_health
 from .languages.base import LanguageParser
 from .languages.dart import DartParser
 from .languages.python import PythonParser, decode_source
@@ -120,6 +121,7 @@ def analyze(options: AnalysisOptions, *, largest_limit: int = 10) -> AnalysisRes
     metrics["test_matching"] = test_matching_metrics
     partial = any(item.analysis_status in {"unreadable", "skipped_size_limit", "parse_failed", "analyzed_with_diagnostics"} for item in records)
     partial = partial or any(item.error_type in _PARTIAL_SCAN_DIAGNOSTICS | {"UnreadablePubspec", "UnreadableManifest", "InvalidPubspecName", "DartUriEscapesRepository"} for item in diagnostics)
+    metrics["health"] = compute_health(records, dependency.edges, dependency.cycle_groups, dependency.unresolved_imports, metrics, partial)
 
     return AnalysisResult(
         files=tuple(records),

@@ -168,6 +168,21 @@ Result schema version 4 adds `frameworks` and `test_matches` to the existing ref
 
 The CLI labels declarations as frameworks and describes test associations as matches. Neither terminal nor JSON output calls them coverage.
 
+### Heuristic health indicator
+
+Analysis stores `metrics.health` (formula version `1`), computed after test matching from existing static analysis facts. It is a heuristic indicator, not a quality guarantee, correctness measure, or coverage measure. Components are independently explained with a 0–100 score, weight, value, availability, and a reason sentence:
+
+| Component | Weight | Formula |
+| --- | ---: | --- |
+| Cycles | 0.30 | `100 * (1 - min(1, 4 * files_in_cycles / files_in_graph))`; saturates at 25%. |
+| Unresolved imports | 0.20 | `100 * (1 - min(1, 2 * unresolved / (local import references + unresolved)))`; saturates at 50%. External imports are excluded. |
+| Test file presence | 0.30 | `100 * sources_with_matching_test / sources_total`, using the name/import heuristic, not coverage. |
+| TODO density | 0.20 | `100 * (1 - min(1, markers_per_KLOC / 20))`; TODO+FIXME markers per 1000 physical LOC. |
+
+The overall score is the weighted mean of available components with weights renormalized to sum to one, rounded to one decimal. It is null when fewer than two components are available; unavailable components are never treated as zero. Levels are good (80+), fair (60+), attention (40+), and poor (below 40). Confidence is high when all four components are available and the analysis is complete, medium when at least three are available (including a partial result), low with exactly two, and none if there is no overall score. `partial` echoes the analysis result. Missing components include their reasons. Cycle availability requires a nonzero eligible graph-file denominator; unresolved-import availability requires at least one local or unresolved reference; test presence requires sources; TODO density requires known LOC and complete comment-marker data. If any marker file is unavailable, density is unavailable because totals may be lower bounds.
+
+The score uses only analyzer output: graph edges/cycles, unresolved import references, test matches, parsed marker totals, and known physical LOC on analyzed Python/Dart files. The cycle denominator includes eligible source/test files that appear in an edge or have an analyzed status. Constants are module-level in `analysis.health` and recorded in the output `thresholds`. Because `metrics` is explicitly free-form JSON and older snapshots can omit arbitrary metric keys, this addition does not change schema version 4. Consumers must treat `metrics.health` as optional when reading stored snapshots.
+
 ### Safe public GitHub checkout (milestone 2.1)
 
 The Git boundary accepts only ASCII `https://github.com/<owner>/<repo>` URLs with optional `.git` and trailing slash; it rejects credentials, ports, query/fragment, other hosts, extra path components, and invalid names. `projectlens.git.checkout_repository` creates a depth-one isolated checkout with a timeout and a maximum checkout size measured before Git metadata is removed. Git runs as an argument list without a shell, with prompts and inherited Git configuration/credential helpers disabled, hooks and fsmonitor disabled, symlink materialization disabled, submodule recursion disabled, and LFS smudging neutralized. The protocol allowlist permits HTTPS only for application calls. Requested commits must be full 40-character SHAs (a shallow fetch by abbreviated SHA is not possible); they are fetched shallowly by SHA and the resulting SHA is checked against the request. On Windows, read-only Git object files are cleared before removal.

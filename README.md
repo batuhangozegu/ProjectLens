@@ -2,6 +2,8 @@
 
 ProjectLens is a local repository analyzer. The installable CLI scans repositories, parses Python and Dart without executing code, resolves Python imports and Dart file/package URIs, detects cycles, reports declared frameworks and source-to-test matches, calculates basic metrics, and can export deterministic JSON.
 
+Analysis JSON also includes an explainable `metrics.health` heuristic (formula version 1) based on dependency cycles, unresolved imports, test file presence by name/import heuristic, and TODO/FIXME density. It is not a quality guarantee, correctness measure, or coverage measure; components with missing data are reported as unavailable. Older stored snapshots may omit this optional key.
+
 ## Setup
 
 Python 3.10 or newer is required. From the repository root:
@@ -185,7 +187,7 @@ Expected exclusions and skipped symlinks alone do not make the pipeline result p
 - `.gitignore` is not honored; built-in excluded directories and explicit scanner exclusions apply.
 - LOC is physical lines, including blank and comment lines.
 - Framework detection reports recognized dependencies declared in manifests; it does not mean the repository uses them in code. Source-to-test matches use resolved imports and filename/path heuristics; they are not coverage and do not report whether tests pass.
-- No health or risk scores are produced.
+- The health indicator is a heuristic based on static analysis, not a quality guarantee, correctness measure, or coverage measure. Missing or incomplete facts make individual components unavailable; older snapshots may not include `metrics.health`.
 - AI, project tracking, and frontend functionality are not included. The optional API and persistence layer are separate from the analyzer core and require the `app` extra.
 - Repository code is never imported or executed.
 - ProjectLens JSON exports carry a `projectlens_format` marker. Existing marked JSON files within the scan size limit are excluded and reported as `Excluded`. The exact `--output` path is excluded for the current run, including when it is inside the analyzed tree.

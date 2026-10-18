@@ -34,6 +34,14 @@ def format_summary(result: AnalysisResult, root: str, *, max_diagnostics: int = 
     lines.append(
         f"Test matches: {matching.get('sources_with_matching_test', 0)} of {matching.get('sources_total', 0)} source files have a matching test file (name/import heuristic, not coverage)"
     )
+    health = metrics.get("health")
+    if health:
+        if health.get("score") is None:
+            lines.append(f"Health: unavailable ({health['reason']})")
+        else:
+            lines.append(f"Health: {health['score']:.1f} ({health['level']}, confidence: {health['confidence']})")
+        for missing in health.get("missing", ()):
+            lines.append(f"  Health component unavailable ({missing['id']}): {missing['reason']}")
     if result.cycles:
         for index, cycle in enumerate(result.cycles, start=1):
             lines.append(f"  {index}. " + ", ".join(cycle))

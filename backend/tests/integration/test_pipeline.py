@@ -30,7 +30,7 @@ def test_fixture_pipeline_has_expected_records_graph_metrics_and_diagnostics():
         {"source_file": "src/pkg/left.py", "line": 4, "module": "requests", "kind": "third_party"},
     )
     assert result.unresolved_imports == ()
-    assert result.metrics == {
+    assert {key: value for key, value in result.metrics.items() if key != "health"} == {
         "total_file_count": 10,
         "python_file_count": 8,
         "physical_loc": {"total": 25, "known_file_count": 10, "unavailable_file_count": 0, "unavailable_files": []},
@@ -70,6 +70,8 @@ def test_fixture_pipeline_has_expected_records_graph_metrics_and_diagnostics():
     assert broken.analysis_status == "parse_failed"
     assert [(d.stage, d.file, d.error_type) for d in result.diagnostics] == [("parse", "broken.py", "SyntaxError"), ("parse", "broken.py", "TokenizeError")]
     assert result.partial is True
+    assert result.metrics["health"]["formula_version"] == "1"
+    assert result.metrics["health"]["score"] == 25.0
     assert "__pycache__/" not in "\n".join(item.path for item in result.files)
 
 
@@ -137,6 +139,14 @@ def test_pipeline_detects_each_manifest_and_matches_name_and_resolved_import(tmp
     assert by_source["src/module.py"] == ({"path": "tests/test_module.py", "rule": "import"},)
     assert by_source["lib/src/widget.dart"] == ({"path": "test/src/widget_test.dart", "rule": "name"},)
     assert result.metrics["test_matching"]["sources_with_matching_test"] == 2
+    assert result.metrics["health"]["formula_version"] == "1"
+    assert result.metrics["health"]["score"] is not None
+
+
+def test_empty_repository_health_is_unavailable(tmp_path):
+    result = analyze(AnalysisOptions(str(tmp_path)))
+    assert result.metrics["health"]["score"] is None
+    assert result.metrics["health"]["confidence"] == "none"
 
 
 def test_manifest_read_failure_is_diagnostic_and_partial(tmp_path, monkeypatch):

@@ -187,8 +187,8 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 
 ### 5.4 — Health skorları
 
-- [ ] Formül, gerekçe listesi, formül sürümü ve eksik veri davranışı (hesaplanamayan bileşen skoru uydurmaz) ile tanımla ve uygula.
-- [ ] Doğrula, belgele ve commit at.
+- [x] Formül, gerekçe listesi, formül sürümü ve eksik veri davranışı (hesaplanamayan bileşen skoru uydurmaz) ile tanımla ve uygula.
+- [x] Doğrula, belgele ve commit at.
 
 ### 5.5 — Git history/churn ve risk
 

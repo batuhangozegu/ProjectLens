@@ -32,6 +32,8 @@ def test_fixture_summary_reports_metrics_cycles_and_partial_result(tmp_path, cap
     assert "3 local edges, 1 external, 0 unresolved" in output
     assert "Frameworks declared: 0" in output
     assert "Test matches: 0 of 6 source files have a matching test file (name/import heuristic, not coverage)" in output
+    assert "Health: 25.0 (poor, confidence: medium)" in output
+    assert "Health component unavailable (todo_density)" in output
     assert "src/pkg/left.py, src/pkg/right.py" in output
     assert "Diagnostics: 2" in output
     assert "more diagnostic(s) not shown" in output
