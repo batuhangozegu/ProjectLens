@@ -32,7 +32,8 @@ ProjectLens/
     │           ├── scanner.py        # Dosya keşfi, sınıflandırma, hariç tutma
     │           ├── languages/
     │           │   ├── base.py       # LanguageParser Protocol
-    │           │   └── python.py     # Python AST adaptörü
+    │           │   ├── python.py     # Python AST adaptörü
+    │           │   └── dart.py       # Dart lexer/parser adaptörü
     │           ├── dependency.py     # Import çözümleme, graph ve cycle analizi
     │           └── metrics.py        # LOC, büyük dosyalar, yorum işaretleri
     └── tests/
@@ -68,7 +69,7 @@ Task durumları `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED` olacak. Backlog bir gö
 
 1. **Girdi doğrulama:** Var olan, okunabilir bir local dizin seçilir. İlk milestone Git repository olmayı şart koşmaz.
 2. **Tarama ve sınıflandırma:** Dosya ağacı çıkarılır; Python, test, config ve documentation dosyaları belirlenir. Hariç bırakılanlar ve sınıflandırmanın sezgisel olduğu açıklanır.
-3. **Parse:** Dil adaptörü kaynak metinden sembolleri ve importları çıkarır. Python için `ast` kullanılır.
+3. **Parse:** Dil adaptörü kaynak metinden sembolleri ve importları çıkarır. Python için `ast`, Dart için standart kütüphane tabanlı lexer kullanılır.
 4. **Import çözümleme:** Yerel modüller dosyalara eşlenir. External ve çözülemeyen importlar graph'a sahte dosyalar olarak eklenmez; ayrı raporlanır.
 5. **Dependency graph:** Yerel Python dosyaları ve aralarındaki yönlü kenarlar oluşturulur. İzole Python dosyaları da node olarak korunur.
 6. **Cycle analizi:** Strongly connected component'ler kullanılır. Birden fazla dosyalı bileşenler ve self-loop'lar cycle grubu sayılır; bütün basit cycle yolları enumerate edilmez.
@@ -113,6 +114,14 @@ The Python parser uses only `ast` and `tokenize`; it never imports or executes r
 
 Only uppercase whole-word `TODO` and `FIXME` occurrences in comment tokens count. Marker strings use `KIND:line`, are ordered by line then source occurrence, and ignore string/docstring contents. If tokenization fails, comments yielded before the failure are kept and a `TokenizeError` diagnostic is added. Syntax, null-byte, resource-limit, and byte-decoding failures are represented as parse diagnostics; `decode_source` follows Python encoding cookies and UTF-8 BOM detection. Symbols and imports are sorted deterministically by source position and stable field values.
 
+### Dart parser v1 scope
+
+The Dart adapter uses a small hand-written lexer with no additional dependencies. It skips line comments, nested block comments, raw and ordinary single/double/triple quoted strings, and interpolation expressions, so declarations and markers inside them are ignored. It extracts class, mixin, enum, named/unnamed extension, typedef, top-level function/accessor, and class-like member declarations; method names are qualified as `Type.member`. Brace matching provides inclusive source ranges. Constructors may be recorded as methods when they have bodies; declaration-only constructors are omitted. An unnamed extension is represented as `<unnamed>`.
+
+Import, export, `part`, and URI-form `part of` directives are stored in ImportRecord; that model does not preserve directive kind. The URI is the primary URI as written (conditional alternatives are ignored), `show` names are sorted, and `as`/`hide` clauses are not represented. TODO/FIXME markers use the Python parser's `KIND:line` convention and come only from comments. Unterminated strings/comments produce file-local SyntaxError diagnostics while retaining preceding declarations and comments.
+
+This is a declaration-oriented lexer, not a complete Dart grammar: it does not perform type or package resolution, merge part files, or model all modern language constructs. Generated `.g.dart`, `.freezed.dart`, and `.gr.dart` files remain included. `.dart_tool` is excluded by the scanner. Dart files contribute to total file/physical LOC and comment marker metrics; Python-specific counts remain Python-only. The dependency graph remains Python-only until step 5.2.
+
 ### Dependency graph v1 decisions
 
 Yerel modül indeksi `.py` dosyalarından kurulur; `.pyi` dosyaları modül kaynağı değildir. Repository kökü ve varsa en üstteki `src/` dizini source root sayılır. İsim çakışması olan modüller seçilmez, ambiguous olarak raporlanır. Namespace package dizinleri (`__init__.py` olmayan dizinler) indekslenmiş paket sayılmaz; bunlardan geçen yerel çözümlemeler unresolved/`NamespacePackage` tanısı alır. Dinamik importlar bu adımda kapsanmaz.
@@ -141,7 +150,7 @@ The pipeline is a synchronous library function and does not depend on the CLI, H
 
 `total_file_count` and `python_file_count` include every discovered record, even if its content could not be read or parsed. Physical LOC is the scanner's count of physical lines, including blank and comment lines, summed over files with a known count. Python LOC uses the same definition for scanner-classified Python files. Both LOC metrics report known and unavailable file counts and paths; unavailable LOC is not silently treated as measured zero. Largest files are ordered by descending known physical LOC and then ascending repository-relative path, with a configurable default limit of 10; these are size facts, not risk scores.
 
-TODO/FIXME totals count parser-produced uppercase whole-word markers in comment tokens only. String contents do not count. Per-file counts include each Python file; `available` is false and the path is listed under `unavailable_files` if reading/decoding/tokenization did not provide complete marker data. Totals are known occurrences, so they can be lower bounds when unavailable files exist. Dependency summary counts local graph edges, external import references, unresolved import references, and cycle groups. External and unresolved references are also retained in the serialized result. Result schema version 3 adds those reference collections and the explicit `partial` flag.
+TODO/FIXME totals count parser-produced uppercase whole-word markers in comment tokens only. String contents do not count. Per-file counts include parsed Python and Dart files; `available` is false and the path is listed under `unavailable_files` if reading/decoding/parsing did not provide complete marker data. Totals are known occurrences, so they can be lower bounds when unavailable files exist. Dependency summary counts local graph edges, external import references, unresolved import references, and cycle groups. External and unresolved references are also retained in the serialized result. Result schema version 3 adds those reference collections and the explicit `partial` flag.
 
 ### Safe public GitHub checkout (milestone 2.1)
 

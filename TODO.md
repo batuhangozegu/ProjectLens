@@ -164,13 +164,45 @@ Tasarım `docs/ARCHITECTURE.md` içindeki "Code-aware tracking tasarımı" böl�
 
 ## 5 — Analiz çekirdeğini genişletme
 
-- [ ] Dart/Flutter parser adaptörü, fixture'lar ve dil testlerini ekle.
-- [ ] Framework tespiti ve test dosyası eşleşmesi ekle; coverage ile farkını belirt.
-- [ ] Health skorlarını formül, gerekçe, sürüm ve eksik veri davranışıyla tanımla.
-- [ ] Git history/churn ve açıklanabilir risk seviyelerini ekle.
-- [ ] Büyük class/fonksiyon ve coupling bulgularını ekle.
-- [ ] Complexity ve duplication analizini ihtiyaç olduğunda ayrı adımlarla değerlendir.
-- [ ] Her özellik için doğrula, belgele ve commit at.
+Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/import etmez; ağır parser bağımlılığı (tree-sitter vb.) eklenmeden önce gerekçe belgelenir.
+
+### 5.1 — Dart/Flutter parser adaptörü
+
+- [x] `.dart` için `LanguageParser` adaptörü: semboller, import/export/part direktifleri ve yalnızca yorumlardan TODO/FIXME.
+- [x] Scanner sınıflandırması: Dart kaynak/test ve pubspec/analysis_options config; üretilmiş `*.g.dart` dosyaları dışlanmaz.
+- [x] Pipeline'a Dart parser'ı bağla; fixture Dart repository'si ve dil testleri; bozuk/encoding hatalı dosya tanıları.
+- [x] Doğrula, belgele ve commit at.
+
+### 5.2 — Dart bağımlılık çözümleme
+
+- [ ] `package:<pubspec adı>/...` ve göreli import/export/part yollarını yerel dosyalara çöz; `dart:` ve dış paketler external, çözülemeyenler unresolved.
+- [ ] Python graph'ı ile aynı sonuç sözleşmesine (edge, cycle, sayaçlar) birleştir; karışık dilli repository testi.
+- [ ] Metrikler Dart dosyalarını da saymalı; doğrula, belgele ve commit at.
+
+### 5.3 — Framework tespiti ve test eşleşmesi
+
+- [ ] Manifest tabanlı framework tespiti (pubspec/pyproject/requirements: Flutter, FastAPI, Django, Flask vb.), kanıt dosyasıyla birlikte.
+- [ ] Kaynak↔test dosyası ad/dizin eşleşmesi; sonuç açıkça "eşleşme"dir, coverage değildir ve belgede/çıktıda böyle etiketlenir.
+- [ ] Doğrula, belgele ve commit at.
+
+### 5.4 — Health skorları
+
+- [ ] Formül, gerekçe listesi, formül sürümü ve eksik veri davranışı (hesaplanamayan bileşen skoru uydurmaz) ile tanımla ve uygula.
+- [ ] Doğrula, belgele ve commit at.
+
+### 5.5 — Git history/churn ve risk
+
+- [ ] Güvenli (shell'siz, sınırlı) git log okuyucusu ile dosya bazlı churn; açıklanabilir risk seviyeleri.
+- [ ] Doğrula, belgele ve commit at.
+
+### 5.6 — Büyük class/fonksiyon ve coupling bulguları
+
+- [ ] Büyük sembol ve yüksek fan-in/fan-out bulguları, eşikler ve gerekçeleriyle.
+- [ ] Doğrula, belgele ve commit at.
+
+### 5.7 — Complexity ve duplication değerlendirmesi
+
+- [ ] İhtiyaç ve maliyeti değerlendir; gerekiyorsa ayrı küçük adımlara böl, gerekmiyorsa kararı belgele.
 
 ## 6 — İsteğe bağlı AI katmanı
 

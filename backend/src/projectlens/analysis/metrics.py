@@ -35,7 +35,9 @@ def compute_metrics(
     marker_counts: dict[str, dict[str, int]] = {}
     unavailable_markers: list[str] = []
     totals = Counter()
-    for file in python_files:
+    for file in ordered_files:
+        if file.language not in {"python", "dart"}:
+            continue
         parsed = parsed_by_path.get(file.path)
         counts = Counter()
         complete = parsed is not None
@@ -45,6 +47,8 @@ def compute_metrics(
                 if kind in ("TODO", "FIXME"):
                     counts[kind] += 1
             if any(d.error_type in ("EncodingError", "TokenizeError") for d in parsed.diagnostics):
+                complete = False
+            if file.language == "dart" and any(d.error_type == "SyntaxError" for d in parsed.diagnostics):
                 complete = False
         if not complete:
             unavailable_markers.append(file.path)

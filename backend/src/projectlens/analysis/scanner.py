@@ -33,7 +33,7 @@ class ScanResult:
 
 _EXCLUDED_DIRS = {
     ".git", ".venv", "venv", "env", "__pycache__", ".mypy_cache",
-    ".pytest_cache", ".ruff_cache", ".tox", "node_modules", "build", "dist", ".eggs",
+    ".pytest_cache", ".ruff_cache", ".tox", "node_modules", "build", "dist", ".eggs", ".dart_tool",
 }
 _LANGUAGES = {
     ".py": "python", ".pyi": "python", ".js": "javascript", ".jsx": "javascript",
@@ -43,7 +43,7 @@ _LANGUAGES = {
     ".swift": "swift", ".dart": "dart", ".sh": "shell", ".yaml": "yaml",
     ".yml": "yaml", ".toml": "toml", ".json": "json", ".xml": "xml", ".md": "markdown",
 }
-_CONFIG_NAMES = {"pyproject.toml", "setup.cfg", "setup.py", "tox.ini", "config.yaml", "config.yml", ".editorconfig", "makefile", "dockerfile"}
+_CONFIG_NAMES = {"pyproject.toml", "setup.cfg", "setup.py", "tox.ini", "config.yaml", "config.yml", ".editorconfig", "makefile", "dockerfile", "pubspec.yaml", "pubspec.lock", "analysis_options.yaml"}
 
 
 def normalize_repo_path(path: str) -> str:
@@ -56,12 +56,16 @@ def _classify(path: str, language: str | None) -> str:
     parts = path.lower().split("/")
     if language == "python" and (name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py" or "tests" in parts):
         return "test"
+    if language == "dart" and (name.endswith("_test.dart") or "test" in parts or "integration_test" in parts):
+        return "test"
     if name in _CONFIG_NAMES or name.endswith((".toml", ".ini", ".cfg", ".yaml", ".yml", ".json")) or name.startswith(".") and name in {".gitignore", ".dockerignore"}:
         return "config"
     if name in {"readme", "changelog", "license", "contributing"} or name.endswith((".md", ".rst", ".txt")):
         return "documentation"
     if language == "python":
         return "python_source"
+    if language == "dart":
+        return "dart_source"
     return "other"
 
 

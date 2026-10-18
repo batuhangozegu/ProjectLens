@@ -7,13 +7,14 @@ from pathlib import Path
 
 from .dependency import build_dependency_graph
 from .languages.base import LanguageParser
+from .languages.dart import DartParser
 from .languages.python import PythonParser, decode_source
 from .metrics import compute_metrics
 from .models import AnalysisDiagnostic, AnalysisOptions, AnalysisResult, FileRecord, ParsedFile
 from .scanner import scan_repository
 
 
-_PARSERS: tuple[LanguageParser, ...] = (PythonParser(),)
+_PARSERS: tuple[LanguageParser, ...] = (PythonParser(), DartParser())
 _FATAL_PARSE_DIAGNOSTICS = {
     "SyntaxError", "NullByteError", "ValueError", "EncodingError", "RecursionError", "MemoryError",
 }

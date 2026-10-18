@@ -58,6 +58,25 @@ def test_paths_and_classification(tmp_path):
     assert {f.path: f.file_class for f in result.files} == {"test_a.py": "test", "conftest.py": "test", "settings.toml": "config", "README.md": "documentation", "main.py": "python_source", "blob.bin": "other"}
 
 
+def test_dart_classification_and_dart_tool_exclusion(tmp_path):
+    for rel in ("lib/main.dart", "lib/user_test.dart", "test/user.dart", "integration_test/app.dart", "pubspec.yaml", "pubspec.lock", "analysis_options.yaml", "lib/data.g.dart"):
+        target = tmp_path / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("")
+    hidden = tmp_path / ".dart_tool" / "generated.dart"
+    hidden.parent.mkdir()
+    hidden.write_text("")
+    result = scan(tmp_path)
+    classes = {item.path: item.file_class for item in result.files}
+    assert classes == {
+        "analysis_options.yaml": "config", "integration_test/app.dart": "test",
+        "lib/data.g.dart": "dart_source", "lib/main.dart": "dart_source",
+        "lib/user_test.dart": "test", "pubspec.lock": "config", "pubspec.yaml": "config",
+        "test/user.dart": "test",
+    }
+    assert any(d.file == ".dart_tool" and d.error_type == "Excluded" for d in result.diagnostics)
+
+
 def test_unreadable_file_is_diagnostic(tmp_path, monkeypatch):
     (tmp_path / "bad.py").write_text("pass\n")
     real_open = open
