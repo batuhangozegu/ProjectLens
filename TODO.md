@@ -175,9 +175,9 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 
 ### 5.2 — Dart bağımlılık çözümleme
 
-- [ ] `package:<pubspec adı>/...` ve göreli import/export/part yollarını yerel dosyalara çöz; `dart:` ve dış paketler external, çözülemeyenler unresolved.
-- [ ] Python graph'ı ile aynı sonuç sözleşmesine (edge, cycle, sayaçlar) birleştir; karışık dilli repository testi.
-- [ ] Metrikler Dart dosyalarını da saymalı; doğrula, belgele ve commit at.
+- [x] `package:<pubspec adı>/...` ve göreli import/export/part yollarını yerel dosyalara çöz; `dart:` ve dış paketler external, çözülemeyenler unresolved.
+- [x] Python graph'ı ile aynı sonuç sözleşmesine (edge, cycle, sayaçlar) birleştir; karışık dilli repository testi.
+- [x] Metrikler Dart dosyalarını da saymalı; doğrula, belgele ve commit at.
 
 ### 5.3 — Framework tespiti ve test eşleşmesi
 

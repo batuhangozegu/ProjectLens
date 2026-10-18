@@ -120,7 +120,13 @@ The Dart adapter uses a small hand-written lexer with no additional dependencies
 
 Import, export, `part`, and URI-form `part of` directives are stored in ImportRecord; that model does not preserve directive kind. The URI is the primary URI as written (conditional alternatives are ignored), `show` names are sorted, and `as`/`hide` clauses are not represented. TODO/FIXME markers use the Python parser's `KIND:line` convention and come only from comments. Unterminated strings/comments produce file-local SyntaxError diagnostics while retaining preceding declarations and comments.
 
-This is a declaration-oriented lexer, not a complete Dart grammar: it does not perform type or package resolution, merge part files, or model all modern language constructs. Generated `.g.dart`, `.freezed.dart`, and `.gr.dart` files remain included. `.dart_tool` is excluded by the scanner. Dart files contribute to total file/physical LOC and comment marker metrics; Python-specific counts remain Python-only. The dependency graph remains Python-only until step 5.2.
+This is a declaration-oriented lexer, not a complete Dart grammar: it does not perform type resolution, merge part files, or model all modern language constructs. Generated `.g.dart`, `.freezed.dart`, and `.gr.dart` files remain included. `.dart_tool` is excluded by the scanner. Dart files contribute to total file/physical LOC and comment marker metrics; Python-specific counts remain Python-only.
+
+### Dart dependency resolution v1
+
+The pipeline reads scanned `pubspec.yaml` files within the configured file size limit and extracts only a top-level `name:` line using a tolerant line reader; it does not load or execute YAML. Each pubspec directory is a package root, and a Dart file belongs to its nearest enclosing root. `package:<name>/<path>` resolves to that package's `lib/<path>` when the name is local and unique; local targets must exist among scanned Dart files. Duplicate local package names are unresolved as ambiguous. Unknown package names and `dart:` URIs are external references. Relative URIs resolve from the importing file, and paths escaping the repository are unresolved with a diagnostic. Other URI schemes are unresolved as unsupported; nothing is fetched.
+
+The parser does not retain whether a URI came from `import`, `export`, `part`, or URI-form `part of`, so all recorded directives count uniformly as dependencies. Conditional-import alternatives are not retained. Pub workspaces and `dependency_overrides` are not interpreted, and path/git dependencies are not resolved; `package:` imports for packages not declared by a local pubspec remain external. Edges are merged by source/target with sorted evidence lines, distinct-neighbor counts, and strongly connected component cycle groups. Python and Dart graphs are merged into the same result; Python-only results retain their previous graph behavior.
 
 ### Dependency graph v1 decisions
 

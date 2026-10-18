@@ -1,6 +1,6 @@
 # ProjectLens
 
-ProjectLens is a local repository analyzer. The installable CLI scans repositories, parses Python and Dart without executing code, resolves Python import-level dependencies, detects cycles, calculates basic metrics, and can export deterministic JSON.
+ProjectLens is a local repository analyzer. The installable CLI scans repositories, parses Python and Dart without executing code, resolves Python imports and Dart file/package URIs, detects cycles, calculates basic metrics, and can export deterministic JSON.
 
 ## Setup
 
@@ -178,7 +178,7 @@ Expected exclusions and skipped symlinks alone do not make the pipeline result p
 ## Scope and limitations
 
 - Python and Dart source files are parsed for symbols, directives/import records, and comment markers. Dart support uses a small standard-library lexer and does not resolve types.
-- The dependency graph remains Python-only; Dart import resolution is planned separately.
+- Python imports and Dart relative/local `package:` directives contribute to the merged dependency graph. Dart resolution uses local pubspec names only; unknown packages are external and no package manager or repository code is run.
 - File classes are heuristic.
 - `.gitignore` is not honored; built-in excluded directories and explicit scanner exclusions apply.
 - LOC is physical lines, including blank and comment lines.

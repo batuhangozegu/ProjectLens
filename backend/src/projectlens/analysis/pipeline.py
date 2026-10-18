@@ -5,12 +5,13 @@ from __future__ import annotations
 from dataclasses import asdict, replace
 from pathlib import Path
 
-from .dependency import build_dependency_graph
+from .dependency import DependencyGraphResult, build_dependency_graph
+from .dependency_dart import build_dart_dependency_graph, read_pubspec_name
 from .languages.base import LanguageParser
 from .languages.dart import DartParser
 from .languages.python import PythonParser, decode_source
 from .metrics import compute_metrics
-from .models import AnalysisDiagnostic, AnalysisOptions, AnalysisResult, FileRecord, ParsedFile
+from .models import AnalysisDiagnostic, AnalysisOptions, AnalysisResult, DependencyEdge, FileRecord, ParsedFile
 from .scanner import scan_repository
 
 
@@ -77,11 +78,30 @@ def analyze(options: AnalysisOptions, *, largest_limit: int = 10) -> AnalysisRes
         records.append(replace(record, analysis_status=status))
 
     python_paths = [item.path for item in records if item.language == "python"]
-    dependency = build_dependency_graph(python_paths, parsed_files)
+    dart_paths = [item.path for item in records if item.language == "dart"]
+    python_dependency = build_dependency_graph(python_paths, parsed_files)
+
+    pubspec_names: dict[str, str | None] = {}
+    if dart_paths:
+        for record in records:
+            if record.path.rsplit("/", 1)[-1] != "pubspec.yaml":
+                continue
+            try:
+                if record.analysis_status == "skipped_size_limit":
+                    raise ValueError("pubspec.yaml exceeds configured file size limit")
+                data = (root / Path(record.path)).read_bytes()
+                if len(data) > options.max_file_size_bytes:
+                    raise ValueError("pubspec.yaml exceeds configured file size limit")
+                pubspec_names[record.path] = read_pubspec_name(data.decode("utf-8-sig"))
+            except (OSError, UnicodeError, ValueError) as exc:
+                pubspec_names[record.path] = None
+                diagnostics.append(AnalysisDiagnostic("dependency", record.path, "UnreadablePubspec", type(exc).__name__))
+    dart_dependency = build_dart_dependency_graph(dart_paths, parsed_files, pubspec_names)
+    dependency = _merge_dependencies(python_dependency, dart_dependency)
     diagnostics.extend(dependency.diagnostics)
     metrics = compute_metrics(records, parsed_files, dependency, largest_limit=largest_limit)
     partial = any(item.analysis_status in {"unreadable", "skipped_size_limit", "parse_failed", "analyzed_with_diagnostics"} for item in records)
-    partial = partial or any(item.error_type in _PARTIAL_SCAN_DIAGNOSTICS for item in diagnostics)
+    partial = partial or any(item.error_type in _PARTIAL_SCAN_DIAGNOSTICS | {"UnreadablePubspec", "InvalidPubspecName", "DartUriEscapesRepository"} for item in diagnostics)
 
     return AnalysisResult(
         files=tuple(records),
@@ -92,4 +112,20 @@ def analyze(options: AnalysisOptions, *, largest_limit: int = 10) -> AnalysisRes
         metrics=metrics,
         diagnostics=tuple(sorted(diagnostics, key=lambda item: (item.stage, item.file or "", item.error_type, item.message))),
         partial=partial,
+    )
+
+
+def _merge_dependencies(*results: DependencyGraphResult) -> DependencyGraphResult:
+    """Merge language graphs while preserving deterministic result ordering."""
+    edges = {(edge.source, edge.target): set(edge.evidence_lines) for result in results for edge in result.edges}
+    files = sorted({path for result in results for path in (*result.incoming_counts, *result.outgoing_counts)})
+    merged_edges = tuple(DependencyEdge(source, target, min(lines), tuple(sorted(lines))) for (source, target), lines in sorted(edges.items()))
+    return DependencyGraphResult(
+        merged_edges,
+        tuple(sorted({item for result in results for item in result.external_imports}, key=lambda item: (item.source_file, item.line, item.module, item.kind))),
+        tuple(sorted({item for result in results for item in result.unresolved_imports}, key=lambda item: (item.source_file, item.line, item.module, item.kind))),
+        {path: sum(result.incoming_counts.get(path, 0) for result in results) for path in files},
+        {path: sum(result.outgoing_counts.get(path, 0) for result in results) for path in files},
+        tuple(sorted({group for result in results for group in result.cycle_groups}, key=lambda group: group[0])),
+        tuple(sorted({item for result in results for item in result.diagnostics}, key=lambda item: (item.file or "", item.error_type, item.message))),
     )
