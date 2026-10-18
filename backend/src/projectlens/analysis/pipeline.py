@@ -7,12 +7,14 @@ from pathlib import Path
 
 from .dependency import DependencyGraphResult, build_dependency_graph
 from .dependency_dart import build_dart_dependency_graph, read_pubspec_name
+from .frameworks import detect_frameworks
 from .languages.base import LanguageParser
 from .languages.dart import DartParser
 from .languages.python import PythonParser, decode_source
 from .metrics import compute_metrics
 from .models import AnalysisDiagnostic, AnalysisOptions, AnalysisResult, DependencyEdge, FileRecord, ParsedFile
 from .scanner import scan_repository
+from .test_matching import match_tests
 
 
 _PARSERS: tuple[LanguageParser, ...] = (PythonParser(), DartParser())
@@ -100,8 +102,24 @@ def analyze(options: AnalysisOptions, *, largest_limit: int = 10) -> AnalysisRes
     dependency = _merge_dependencies(python_dependency, dart_dependency)
     diagnostics.extend(dependency.diagnostics)
     metrics = compute_metrics(records, parsed_files, dependency, largest_limit=largest_limit)
+    manifest_paths = [item for item in records if _is_framework_manifest(item.path)]
+    manifests: list[tuple[str, str]] = []
+    for record in manifest_paths:
+        try:
+            if record.analysis_status == "skipped_size_limit":
+                raise ValueError("manifest exceeds configured file size limit")
+            data = (root / Path(record.path)).read_bytes()
+            if len(data) > options.max_file_size_bytes:
+                raise ValueError("manifest exceeds configured file size limit")
+            manifests.append((record.path, data.decode("utf-8-sig")))
+        except (OSError, UnicodeError, ValueError) as exc:
+            diagnostics.append(AnalysisDiagnostic("frameworks", record.path, "UnreadableManifest", type(exc).__name__))
+    frameworks = detect_frameworks(manifests)
+    metrics["framework_detection"] = {"basis": "manifest declarations; code usage not inspected"}
+    test_matches, test_matching_metrics = match_tests(records, dependency.edges)
+    metrics["test_matching"] = test_matching_metrics
     partial = any(item.analysis_status in {"unreadable", "skipped_size_limit", "parse_failed", "analyzed_with_diagnostics"} for item in records)
-    partial = partial or any(item.error_type in _PARTIAL_SCAN_DIAGNOSTICS | {"UnreadablePubspec", "InvalidPubspecName", "DartUriEscapesRepository"} for item in diagnostics)
+    partial = partial or any(item.error_type in _PARTIAL_SCAN_DIAGNOSTICS | {"UnreadablePubspec", "UnreadableManifest", "InvalidPubspecName", "DartUriEscapesRepository"} for item in diagnostics)
 
     return AnalysisResult(
         files=tuple(records),
@@ -109,10 +127,17 @@ def analyze(options: AnalysisOptions, *, largest_limit: int = 10) -> AnalysisRes
         cycles=dependency.cycle_groups,
         external_imports=tuple(asdict(item) for item in dependency.external_imports),
         unresolved_imports=tuple(asdict(item) for item in dependency.unresolved_imports),
+        frameworks=frameworks,
+        test_matches=test_matches,
         metrics=metrics,
         diagnostics=tuple(sorted(diagnostics, key=lambda item: (item.stage, item.file or "", item.error_type, item.message))),
         partial=partial,
     )
+
+
+def _is_framework_manifest(path: str) -> bool:
+    name = path.rsplit("/", 1)[-1].lower()
+    return name in {"pubspec.yaml", "pyproject.toml", "setup.cfg"} or name.startswith("requirements") and name.endswith(".txt")
 
 
 def _merge_dependencies(*results: DependencyGraphResult) -> DependencyGraphResult:

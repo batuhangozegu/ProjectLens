@@ -34,3 +34,15 @@ def test_schema_version_is_present() -> None:
     value = sample_result().to_dict()
 
     assert value["schema_version"] == SCHEMA_VERSION
+
+
+def test_v3_json_keeps_version_and_defaults_new_fields():
+    old = sample_result().to_dict()
+    old["schema_version"] = "3"
+    old.pop("frameworks")
+    old.pop("test_matches")
+    restored = AnalysisResult.from_dict(old)
+    assert restored.schema_version == "3"
+    assert restored.frameworks == ()
+    assert restored.test_matches == ()
+    assert restored.to_dict()["schema_version"] == "3"

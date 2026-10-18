@@ -1,0 +1,5 @@
+name: framework_demo
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.0.0

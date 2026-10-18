@@ -10,6 +10,7 @@ from projectlens.analysis.scanner import ScanError
 
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "sample_repo"
+FRAMEWORK_FIXTURE = Path(__file__).parents[1] / "fixtures" / "frameworks_repo"
 
 
 def test_fixture_pipeline_has_expected_records_graph_metrics_and_diagnostics():
@@ -62,6 +63,8 @@ def test_fixture_pipeline_has_expected_records_graph_metrics_and_diagnostics():
             "unavailable_files": ["broken.py"],
         },
         "dependencies": {"edge_count": 3, "external_import_count": 1, "unresolved_import_count": 0, "cycle_group_count": 1},
+        "framework_detection": {"basis": "manifest declarations; code usage not inspected"},
+        "test_matching": {"sources_total": 6, "sources_with_matching_test": 0, "sources_without": 6, "by_rule": {"import": 0, "name": 0}, "basis": "name/import heuristics; not coverage"},
     }
     broken = next(item for item in result.files if item.path == "broken.py")
     assert broken.analysis_status == "parse_failed"
@@ -119,4 +122,35 @@ def test_serialization_and_repeated_runs_are_byte_identical_across_roots(tmp_pat
     third = analyze(AnalysisOptions(str(copied_root)))
     assert first.to_json() == second.to_json() == third.to_json()
     assert AnalysisResult.from_json(first.to_json()).to_dict() == first.to_dict()
-    assert json.loads(first.to_json())["schema_version"] == "3"
+    assert json.loads(first.to_json())["schema_version"] == "4"
+
+
+def test_pipeline_detects_each_manifest_and_matches_name_and_resolved_import(tmp_path):
+    fixture = tmp_path / "frameworks_repo"
+    shutil.copytree(FRAMEWORK_FIXTURE, fixture)
+    result = analyze(AnalysisOptions(str(fixture)))
+    assert [(item.name, item.evidence_file) for item in result.frameworks] == [
+        ("Flutter", "pubspec.yaml"), ("Flutter Riverpod", "pubspec.yaml"),
+        ("FastAPI", "pyproject.toml"), ("pytest", "pyproject.toml"),
+    ]
+    by_source = {item.source: item.tests for item in result.test_matches}
+    assert by_source["src/module.py"] == ({"path": "tests/test_module.py", "rule": "import"},)
+    assert by_source["lib/src/widget.dart"] == ({"path": "test/src/widget_test.dart", "rule": "name"},)
+    assert result.metrics["test_matching"]["sources_with_matching_test"] == 2
+
+
+def test_manifest_read_failure_is_diagnostic_and_partial(tmp_path, monkeypatch):
+    manifest = tmp_path / "requirements.txt"
+    manifest.write_text("fastapi\n", encoding="utf-8")
+    original = Path.read_bytes
+
+    def selective_read(path):
+        if path.name == "requirements.txt":
+            raise PermissionError("read denied")
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", selective_read)
+    result = analyze(AnalysisOptions(str(tmp_path)))
+    assert result.partial
+    assert result.frameworks == ()
+    assert any(item.stage == "frameworks" and item.file == "requirements.txt" and item.error_type == "UnreadableManifest" for item in result.diagnostics)

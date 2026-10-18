@@ -7,9 +7,11 @@ from projectlens.analysis.models import (
     AnalysisResult,
     DependencyEdge,
     FileRecord,
+    FrameworkRecord,
     ImportRecord,
     ParsedFile,
     SymbolRecord,
+    TestMatchRecord,
 )
 
 __all__ = [
@@ -19,7 +21,9 @@ __all__ = [
     "AnalysisResult",
     "DependencyEdge",
     "FileRecord",
+    "FrameworkRecord",
     "ImportRecord",
     "ParsedFile",
     "SymbolRecord",
+    "TestMatchRecord",
 ]

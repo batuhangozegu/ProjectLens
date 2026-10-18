@@ -27,6 +27,13 @@ def format_summary(result: AnalysisResult, root: str, *, max_diagnostics: int = 
         f"Dependencies: {dependencies['edge_count']} local edges, {dependencies['external_import_count']} external, {dependencies['unresolved_import_count']} unresolved",
         f"Cycle groups: {dependencies['cycle_group_count']}",
     ))
+    lines.append(f"Frameworks declared: {len(result.frameworks)}")
+    for framework in result.frameworks:
+        lines.append(f"  {framework.name} ({framework.ecosystem}) — {framework.evidence_file}")
+    matching = metrics.get("test_matching", {})
+    lines.append(
+        f"Test matches: {matching.get('sources_with_matching_test', 0)} of {matching.get('sources_total', 0)} source files have a matching test file (name/import heuristic, not coverage)"
+    )
     if result.cycles:
         for index, cycle in enumerate(result.cycles, start=1):
             lines.append(f"  {index}. " + ", ".join(cycle))

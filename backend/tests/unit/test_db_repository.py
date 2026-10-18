@@ -69,7 +69,7 @@ def test_round_trip_pipeline_result_and_summary_columns(factory, tmp_path):
 def test_duplicate_snapshot_is_rejected(factory):
     with factory() as session, session.begin():
         project = create_project(session, "Project")
-        snapshot = {"schema_version": "3", "partial": False, "metrics": {}}
+        snapshot = {"schema_version": "4", "partial": False, "metrics": {}}
         add_snapshot(session, project, snapshot, branch="main", commit="b" * 40)
         with pytest.raises(DuplicateSnapshotError):
             add_snapshot(session, project, snapshot, branch="main", commit="b" * 40)
@@ -81,7 +81,7 @@ def test_unknown_project_raises_domain_error(factory):
             add_snapshot(
                 session,
                 999,
-                {"schema_version": "3", "metrics": {}},
+                {"schema_version": "4", "metrics": {}},
                 branch="main",
                 commit="c" * 40,
             )
@@ -90,7 +90,7 @@ def test_unknown_project_raises_domain_error(factory):
 def test_project_delete_cascades_to_snapshots(factory):
     with factory() as session, session.begin():
         project = create_project(session, "Project")
-        add_snapshot(session, project, {"schema_version": "3", "metrics": {}}, branch="main", commit="d" * 40)
+        add_snapshot(session, project, {"schema_version": "4", "metrics": {}}, branch="main", commit="d" * 40)
         project_id = project.id
     with factory() as session, session.begin():
         session.delete(session.get(Project, project_id))

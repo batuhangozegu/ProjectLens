@@ -181,9 +181,9 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 
 ### 5.3 — Framework tespiti ve test eşleşmesi
 
-- [ ] Manifest tabanlı framework tespiti (pubspec/pyproject/requirements: Flutter, FastAPI, Django, Flask vb.), kanıt dosyasıyla birlikte.
-- [ ] Kaynak↔test dosyası ad/dizin eşleşmesi; sonuç açıkça "eşleşme"dir, coverage değildir ve belgede/çıktıda böyle etiketlenir.
-- [ ] Doğrula, belgele ve commit at.
+- [x] Manifest tabanlı framework tespiti (pubspec/pyproject/requirements: Flutter, FastAPI, Django, Flask vb.), kanıt dosyasıyla birlikte.
+- [x] Kaynak↔test dosyası ad/dizin eşleşmesi; sonuç açıkça "eşleşme"dir, coverage değildir ve belgede/çıktıda böyle etiketlenir.
+- [x] Doğrula, belgele ve commit at.
 
 ### 5.4 — Health skorları
 

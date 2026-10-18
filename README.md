@@ -1,6 +1,6 @@
 # ProjectLens
 
-ProjectLens is a local repository analyzer. The installable CLI scans repositories, parses Python and Dart without executing code, resolves Python imports and Dart file/package URIs, detects cycles, calculates basic metrics, and can export deterministic JSON.
+ProjectLens is a local repository analyzer. The installable CLI scans repositories, parses Python and Dart without executing code, resolves Python imports and Dart file/package URIs, detects cycles, reports declared frameworks and source-to-test matches, calculates basic metrics, and can export deterministic JSON.
 
 ## Setup
 
@@ -156,6 +156,8 @@ Largest files:
 TODO/FIXME: 2 (TODO: 1, FIXME: 1)
 Dependencies: 3 local edges, 1 external, 0 unresolved
 Cycle groups: 1
+Frameworks declared: 0
+Test matches: 0 of 6 source files have a matching test file (name/import heuristic, not coverage)
   1. src/pkg/left.py, src/pkg/right.py
 Diagnostics: 2
   parse/SyntaxError [broken.py]: invalid syntax (line 3)
@@ -182,7 +184,8 @@ Expected exclusions and skipped symlinks alone do not make the pipeline result p
 - File classes are heuristic.
 - `.gitignore` is not honored; built-in excluded directories and explicit scanner exclusions apply.
 - LOC is physical lines, including blank and comment lines.
-- No coverage, health, or risk scores are produced.
+- Framework detection reports recognized dependencies declared in manifests; it does not mean the repository uses them in code. Source-to-test matches use resolved imports and filename/path heuristics; they are not coverage and do not report whether tests pass.
+- No health or risk scores are produced.
 - AI, project tracking, and frontend functionality are not included. The optional API and persistence layer are separate from the analyzer core and require the `app` extra.
 - Repository code is never imported or executed.
 - ProjectLens JSON exports carry a `projectlens_format` marker. Existing marked JSON files within the scan size limit are excluded and reported as `Excluded`. The exact `--output` path is excluded for the current run, including when it is inside the analyzed tree.

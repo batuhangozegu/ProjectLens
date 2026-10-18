@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import PureWindowsPath
 from typing import Any
 
-SCHEMA_VERSION = "3"
+SCHEMA_VERSION = "4"
 RESULT_MARKER_KEY = "projectlens_format"
 RESULT_MARKER_VALUE = "projectlens-analysis"
 
@@ -105,12 +105,36 @@ class DependencyEdge:
 
 
 @dataclass(frozen=True)
+class FrameworkRecord:
+    name: str
+    ecosystem: str
+    evidence_file: str
+    evidence: str
+    kind: str = "manifest"
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "evidence_file", _repo_path(self.evidence_file))
+
+
+@dataclass(frozen=True)
+class TestMatchRecord:
+    source: str
+    tests: tuple[dict[str, str], ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "source", _repo_path(self.source))
+        object.__setattr__(self, "tests", tuple({"path": _repo_path(item["path"]), "rule": item["rule"]} for item in self.tests))
+
+
+@dataclass(frozen=True)
 class AnalysisResult:
     files: tuple[FileRecord, ...] = ()
     dependency_edges: tuple[DependencyEdge, ...] = ()
     cycles: tuple[tuple[str, ...], ...] = ()
     external_imports: tuple[dict[str, Any], ...] = ()
     unresolved_imports: tuple[dict[str, Any], ...] = ()
+    frameworks: tuple[FrameworkRecord, ...] = ()
+    test_matches: tuple[TestMatchRecord, ...] = ()
     metrics: dict[str, Any] = field(default_factory=dict)
     diagnostics: tuple[AnalysisDiagnostic, ...] = ()
     partial: bool = False
@@ -136,6 +160,11 @@ class AnalysisResult:
                     item["source_file"], item["line"], item["module"], item["kind"]
                 ))
             ]
+        value["frameworks"] = [asdict(item) for item in sorted(self.frameworks, key=lambda item: (item.ecosystem, item.name.casefold(), item.evidence_file, item.evidence))]
+        value["test_matches"] = [
+            {"source": item.source, "tests": [dict(test) for test in sorted(item.tests, key=lambda test: (0 if test["rule"] == "import" else 1, test["path"]))]}
+            for item in sorted(self.test_matches, key=lambda item: item.source)
+        ]
         value["diagnostics"] = [
             asdict(item)
             for item in sorted(
@@ -157,10 +186,12 @@ class AnalysisResult:
             cycles=tuple(tuple(cycle) for cycle in value.get("cycles", ())),
             external_imports=tuple(dict(item) for item in value.get("external_imports", ())),
             unresolved_imports=tuple(dict(item) for item in value.get("unresolved_imports", ())),
+            frameworks=tuple(FrameworkRecord(**item) for item in value.get("frameworks", ())),
+            test_matches=tuple(TestMatchRecord(item["source"], tuple(dict(test) for test in item.get("tests", ()))) for item in value.get("test_matches", ())),
             metrics=value.get("metrics", {}),
             diagnostics=tuple(AnalysisDiagnostic(**item) for item in value.get("diagnostics", ())),
             partial=value.get("partial", False),
-            schema_version=value["schema_version"],
+            schema_version=value.get("schema_version", SCHEMA_VERSION),
         )
 
     @classmethod
