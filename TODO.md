@@ -197,8 +197,8 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 
 ### 5.6 — Büyük class/fonksiyon ve coupling bulguları
 
-- [ ] Büyük sembol ve yüksek fan-in/fan-out bulguları, eşikler ve gerekçeleriyle.
-- [ ] Doğrula, belgele ve commit at.
+- [x] Büyük sembol ve yüksek fan-in/fan-out bulguları, eşikler ve gerekçeleriyle.
+- [x] Doğrula, belgele ve commit at.
 
 ### 5.7 — Complexity ve duplication değerlendirmesi
 

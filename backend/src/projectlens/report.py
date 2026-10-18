@@ -57,6 +57,18 @@ def format_summary(result: AnalysisResult, root: str, *, max_diagnostics: int = 
         for item in risk.get("top_risks", ())[:3]:
             factors = ", ".join(factor["id"] for factor in item["factors"])
             lines.append(f"  {item['path']} ({item['level']}, {item['points']} points: {factors})")
+    findings = metrics.get("findings")
+    if findings:
+        counts = findings["counts_by_severity"]
+        kinds = findings["counts_by_kind"]
+        summary = ", ".join(f"{kind.replace('_', ' ')}: {kinds[kind]}" for kind in (
+            "large_function", "large_class", "many_members", "high_fan_out", "high_fan_in"))
+        lines.append(f"Findings: {counts['warning']} warnings, {counts['notice']} notices ({summary})")
+        for item in findings.get("top_findings", ())[:3]:
+            subject = f"{item['path']}:{item['symbol']}" if item["symbol"] else item["path"]
+            unit = "lines" if item["kind"] in {"large_function", "large_class"} else ""
+            value = f"{item['value']} {unit}".rstrip()
+            lines.append(f"  {item['severity']} {item['kind']} {subject} ({value})")
     if result.cycles:
         for index, cycle in enumerate(result.cycles, start=1):
             lines.append(f"  {index}. " + ", ".join(cycle))

@@ -50,6 +50,16 @@ def test_cli_reports_framework_evidence_and_test_matches(tmp_path, capsys):
     assert "Test matches: 2 of 3 source files have a matching test file (name/import heuristic, not coverage)" in output
 
 
+def test_cli_reports_findings(tmp_path, capsys):
+    root = tmp_path / "findings"
+    root.mkdir()
+    (root / "large.py").write_text("def huge():\n" + "    pass\n" * 149, encoding="utf-8")
+    assert main(["analyze", str(root)]) == 0
+    output = capsys.readouterr().out
+    assert "Findings: 1 warnings, 0 notices" in output
+    assert "warning large_function large.py:huge (150 lines)" in output
+
+
 @pytest.mark.parametrize("kind", ["missing", "file", "output_parent", "output_directory"])
 def test_fatal_errors_return_one_without_traceback(tmp_path, capsys, kind):
     root = copy_fixture(tmp_path)

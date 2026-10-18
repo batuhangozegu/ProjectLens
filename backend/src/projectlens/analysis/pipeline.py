@@ -8,6 +8,7 @@ from pathlib import Path
 from .dependency import DependencyGraphResult, build_dependency_graph
 from .dependency_dart import build_dart_dependency_graph, read_pubspec_name
 from .frameworks import detect_frameworks
+from .findings import compute_findings
 from .health import compute_health
 from .languages.base import LanguageParser
 from .languages.dart import DartParser
@@ -105,6 +106,7 @@ def analyze(options: AnalysisOptions, *, largest_limit: int = 10) -> AnalysisRes
     dependency = _merge_dependencies(python_dependency, dart_dependency)
     diagnostics.extend(dependency.diagnostics)
     metrics = compute_metrics(records, parsed_files, dependency, largest_limit=largest_limit)
+    metrics["findings"] = compute_findings(records, parsed_files, dependency.edges, dependency.cycle_groups)
     manifest_paths = [item for item in records if _is_framework_manifest(item.path)]
     manifests: list[tuple[str, str]] = []
     for record in manifest_paths:

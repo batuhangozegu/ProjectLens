@@ -6,6 +6,8 @@ Analysis JSON also includes an explainable `metrics.health` heuristic (formula v
 
 Every new analysis also includes `metrics.risk`, an explainable static heuristic based on file churn (when requested), size, dependency cycles, test file matching, and local fan-in. It is not a prediction of defects; test matches are not coverage. Git history is opt-in, uses a deterministic window relative to the HEAD commit date, and is unavailable for non-Git trees and the API's depth-one checkouts. Older snapshots may omit both `metrics.risk` and `metrics.git_history`.
 
+Analyses also include optional `metrics.findings` for large functions/classes, classes with many methods, and high local dependency fan-in/out. These use documented static thresholds and line spans, so they are review prompts rather than defect predictions. Older snapshots may omit this key; see [architecture](docs/ARCHITECTURE.md#size-and-coupling-findings-56).
+
 ## Setup
 
 Python 3.10 or newer is required. From the repository root:

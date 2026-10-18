@@ -30,8 +30,8 @@ def test_fixture_pipeline_has_expected_records_graph_metrics_and_diagnostics():
         {"source_file": "src/pkg/left.py", "line": 4, "module": "requests", "kind": "third_party"},
     )
     assert result.unresolved_imports == ()
-    # `health` and the newly intentional always-on `risk` metric are pinned below.
-    assert {key: value for key, value in result.metrics.items() if key not in {"health", "risk"}} == {
+    # `health`, `risk` and `findings` are pinned below.
+    assert {key: value for key, value in result.metrics.items() if key not in {"health", "risk", "findings"}} == {
         "total_file_count": 10,
         "python_file_count": 8,
         "physical_loc": {"total": 25, "known_file_count": 10, "unavailable_file_count": 0, "unavailable_files": []},
@@ -223,3 +223,22 @@ def test_git_history_unexpected_failure_is_diagnostic_and_partial(tmp_path, monk
     assert result.partial
     assert result.metrics["git_history"]["reason"] == "output_limit"
     assert any(item.stage == "git_history" and item.error_type == "GitHistoryUnavailable" and item.message == "output_limit" for item in result.diagnostics)
+
+
+def test_analyze_includes_size_and_coupling_findings(tmp_path):
+    root = tmp_path / "findings"
+    root.mkdir()
+    (root / "large.py").write_text("def huge():\n" + "    pass\n" * 99, encoding="utf-8")
+    (root / "large_class.py").write_text("class Huge:\n" + "    value = 1\n" * 449, encoding="utf-8")
+    (root / "hub.py").write_text("VALUE = 1\n", encoding="utf-8")
+    for index in range(10):
+        (root / f"client{index}.py").write_text("import hub\n", encoding="utf-8")
+    for index in range(15):
+        (root / f"target{index}.py").write_text("VALUE = 1\n", encoding="utf-8")
+    (root / "fan.py").write_text("".join(f"import target{i}\n" for i in range(15)), encoding="utf-8")
+    result = analyze(AnalysisOptions(str(root)))
+    findings = result.metrics["findings"]["top_findings"]
+    assert any(item["kind"] == "large_function" and item["symbol"] == "huge" and item["value"] == 100 for item in findings)
+    assert any(item["kind"] == "large_class" and item["symbol"] == "Huge" and item["value"] == 450 for item in findings)
+    assert any(item["kind"] == "high_fan_in" and item["path"] == "hub.py" and item["value"] == 10 for item in findings)
+    assert any(item["kind"] == "high_fan_out" and item["path"] == "fan.py" and item["value"] == 15 for item in findings)
