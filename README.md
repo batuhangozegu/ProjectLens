@@ -4,6 +4,8 @@ ProjectLens is a local repository analyzer. The installable CLI scans repositori
 
 Analysis JSON also includes an explainable `metrics.health` heuristic (formula version 1) based on dependency cycles, unresolved imports, test file presence by name/import heuristic, and TODO/FIXME density. It is not a quality guarantee, correctness measure, or coverage measure; components with missing data are reported as unavailable. Older stored snapshots may omit this optional key.
 
+Every new analysis also includes `metrics.risk`, an explainable static heuristic based on file churn (when requested), size, dependency cycles, test file matching, and local fan-in. It is not a prediction of defects; test matches are not coverage. Git history is opt-in, uses a deterministic window relative to the HEAD commit date, and is unavailable for non-Git trees and the API's depth-one checkouts. Older snapshots may omit both `metrics.risk` and `metrics.git_history`.
+
 ## Setup
 
 Python 3.10 or newer is required. From the repository root:
@@ -24,7 +26,10 @@ optional API, database, and migration dependencies with
 python -m projectlens analyze /path/to/python/project
 projectlens analyze . --output analysis.json
 python -m projectlens analyze . --top 5 --max-diagnostics 3
+python -m projectlens analyze . --git-history --history-days 180
 ```
+
+History collection has bounded output and commit limits. It excludes merge commits and rename tracking, and stores only author counts (never raw emails). The report labels churn as commit counts, not lines changed or bug probability. See [architecture](docs/ARCHITECTURE.md#git-history-and-explainable-risk-55) for the formula, unavailable reasons, and limits.
 
 ## Run the API locally with PostgreSQL
 
@@ -160,6 +165,12 @@ Dependencies: 3 local edges, 1 external, 0 unresolved
 Cycle groups: 1
 Frameworks declared: 0
 Test matches: 0 of 6 source files have a matching test file (name/import heuristic, not coverage)
+Health: 25.0 (poor, confidence: medium)
+  Health component unavailable (todo_density): Marker data is incomplete (1 files unavailable), with 2 known markers across 18 LOC; TODO/FIXME density cannot be scored.
+Risk: 0 high, 0 medium, 6 low
+  src/pkg/left.py (low, 2 points: cycle, untested)
+  src/pkg/right.py (low, 2 points: cycle, untested)
+  flat.py (low, 1 points: untested)
   1. src/pkg/left.py, src/pkg/right.py
 Diagnostics: 2
   parse/SyntaxError [broken.py]: invalid syntax (line 3)

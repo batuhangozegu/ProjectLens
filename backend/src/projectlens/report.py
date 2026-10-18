@@ -42,6 +42,21 @@ def format_summary(result: AnalysisResult, root: str, *, max_diagnostics: int = 
             lines.append(f"Health: {health['score']:.1f} ({health['level']}, confidence: {health['confidence']})")
         for missing in health.get("missing", ()):
             lines.append(f"  Health component unavailable ({missing['id']}): {missing['reason']}")
+    history = metrics.get("git_history")
+    if history is not None:
+        if history.get("available"):
+            top_churn = history.get("top_churn", ())
+            suffix = f" (top churn: {top_churn[0]['path']} ({top_churn[0]['commits']} commits))" if top_churn else ""
+            lines.append(f"Git history: {history['commits_in_window']} commits in last {history['window_days']} days{suffix}")
+        else:
+            lines.append(f"Git history: unavailable ({history['reason']})")
+    risk = metrics.get("risk")
+    if risk:
+        counts = risk["counts_by_level"]
+        lines.append(f"Risk: {counts['high']} high, {counts['medium']} medium, {counts['low']} low")
+        for item in risk.get("top_risks", ())[:3]:
+            factors = ", ".join(factor["id"] for factor in item["factors"])
+            lines.append(f"  {item['path']} ({item['level']}, {item['points']} points: {factors})")
     if result.cycles:
         for index, cycle in enumerate(result.cycles, start=1):
             lines.append(f"  {index}. " + ", ".join(cycle))

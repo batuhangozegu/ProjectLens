@@ -23,6 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
     analyze_command.add_argument("--output", metavar="FILE", help="Write the analysis JSON to FILE.")
     analyze_command.add_argument("--top", type=_non_negative_int, default=10, metavar="N", help="Largest files to show (default: 10).")
     analyze_command.add_argument("--max-diagnostics", type=_non_negative_int, default=5, metavar="N", help="Diagnostics to show in the summary (default: 5).")
+    analyze_command.add_argument("--git-history", action="store_true", help="Include bounded Git history churn metrics.")
+    analyze_command.add_argument("--history-days", type=_history_days, default=180, metavar="N", help="Git history window in days (1-3650; default: 180).")
     return parser
 
 
@@ -33,6 +35,16 @@ def _non_negative_int(value: str) -> int:
         raise argparse.ArgumentTypeError("must be a non-negative integer") from exc
     if number < 0:
         raise argparse.ArgumentTypeError("must be a non-negative integer")
+    return number
+
+
+def _history_days(value: str) -> int:
+    try:
+        number = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be an integer from 1 to 3650") from exc
+    if not 1 <= number <= 3650:
+        raise argparse.ArgumentTypeError("must be an integer from 1 to 3650")
     return number
 
 
@@ -78,7 +90,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             _print_safe(f"error: invalid output path: {exc}", file=sys.stderr)
             return 1
     try:
-        result = analyze(AnalysisOptions(str(root), excluded_paths=excluded_paths), largest_limit=args.top)
+        result = analyze(AnalysisOptions(str(root), excluded_paths=excluded_paths, git_history=args.git_history, history_days=args.history_days), largest_limit=args.top)
     except (ScanError, OSError, ValueError) as exc:
         _print_safe(f"error: {exc}", file=sys.stderr)
         return 1

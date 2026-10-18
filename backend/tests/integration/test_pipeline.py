@@ -30,7 +30,8 @@ def test_fixture_pipeline_has_expected_records_graph_metrics_and_diagnostics():
         {"source_file": "src/pkg/left.py", "line": 4, "module": "requests", "kind": "third_party"},
     )
     assert result.unresolved_imports == ()
-    assert {key: value for key, value in result.metrics.items() if key != "health"} == {
+    # `health` and the newly intentional always-on `risk` metric are pinned below.
+    assert {key: value for key, value in result.metrics.items() if key not in {"health", "risk"}} == {
         "total_file_count": 10,
         "python_file_count": 8,
         "physical_loc": {"total": 25, "known_file_count": 10, "unavailable_file_count": 0, "unavailable_files": []},
@@ -66,6 +67,9 @@ def test_fixture_pipeline_has_expected_records_graph_metrics_and_diagnostics():
         "framework_detection": {"basis": "manifest declarations; code usage not inspected"},
         "test_matching": {"sources_total": 6, "sources_with_matching_test": 0, "sources_without": 6, "by_rule": {"import": 0, "name": 0}, "basis": "name/import heuristics; not coverage"},
     }
+    assert result.metrics["risk"]["formula_version"] == "1"
+    assert result.metrics["risk"]["churn_available"] is False
+    assert set(result.metrics["risk"]["counts_by_level"]) == {"high", "medium", "low", "minimal"}
     broken = next(item for item in result.files if item.path == "broken.py")
     assert broken.analysis_status == "parse_failed"
     assert [(d.stage, d.file, d.error_type) for d in result.diagnostics] == [("parse", "broken.py", "SyntaxError"), ("parse", "broken.py", "TokenizeError")]
@@ -164,3 +168,58 @@ def test_manifest_read_failure_is_diagnostic_and_partial(tmp_path, monkeypatch):
     assert result.partial
     assert result.frameworks == ()
     assert any(item.stage == "frameworks" and item.file == "requirements.txt" and item.error_type == "UnreadableManifest" for item in result.diagnostics)
+
+
+def test_git_history_is_opt_in_and_unavailable_reason_is_informational(tmp_path):
+    root = tmp_path / "plain"
+    root.mkdir()
+    (root / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
+    ordinary = analyze(AnalysisOptions(str(root)))
+    requested = analyze(AnalysisOptions(str(root), git_history=True))
+    assert "git_history" not in ordinary.metrics
+    assert "risk" in ordinary.metrics
+    assert requested.metrics["git_history"]["available"] is False
+    assert requested.metrics["git_history"]["reason"] == "not_a_git_repository"
+    assert not requested.partial
+    assert not any(item.stage == "git_history" for item in requested.diagnostics)
+
+
+def test_git_history_true_analyzes_committed_tree(tmp_path):
+    import os
+    import shutil
+    import subprocess
+
+    executable = shutil.which("git")
+    if executable is None:
+        pytest.skip("git executable is unavailable")
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
+    subprocess.run([executable, "init", "-q", str(root)], check=True)
+    env = os.environ.copy()
+    env.update({"GIT_AUTHOR_NAME": "Test", "GIT_AUTHOR_EMAIL": "test@example.test", "GIT_COMMITTER_NAME": "Test", "GIT_COMMITTER_EMAIL": "test@example.test", "GIT_AUTHOR_DATE": "2024-01-01T00:00:00+00:00", "GIT_COMMITTER_DATE": "2024-01-01T00:00:00+00:00"})
+    subprocess.run([executable, "-C", str(root), "add", "module.py"], check=True, env=env)
+    subprocess.run([executable, "-C", str(root), "commit", "-qm", "init"], check=True, env=env)
+    first = analyze(AnalysisOptions(str(root), git_history=True, history_days=60))
+    second = analyze(AnalysisOptions(str(root), git_history=True, history_days=60))
+    assert first.metrics["git_history"]["available"] is True
+    assert first.metrics["git_history"]["commits_in_window"] == 1
+    assert first.to_json() == second.to_json()
+
+
+def test_git_history_unexpected_failure_is_diagnostic_and_partial(tmp_path, monkeypatch):
+    import projectlens.analysis.pipeline as pipeline
+    from projectlens.git.history import GitHistoryUnavailable
+
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
+
+    def fail(*_args, **_kwargs):
+        raise GitHistoryUnavailable("output_limit")
+
+    monkeypatch.setattr(pipeline, "read_git_history", fail)
+    result = analyze(AnalysisOptions(str(root), git_history=True))
+    assert result.partial
+    assert result.metrics["git_history"]["reason"] == "output_limit"
+    assert any(item.stage == "git_history" and item.error_type == "GitHistoryUnavailable" and item.message == "output_limit" for item in result.diagnostics)

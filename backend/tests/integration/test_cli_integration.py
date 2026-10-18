@@ -134,6 +134,23 @@ def test_non_ascii_root_does_not_crash_console(tmp_path, capsys):
     assert "Root:" in capsys.readouterr().out
 
 
+def test_cli_git_history_flags_and_risk_summary(tmp_path, capsys):
+    root = tmp_path / "plain"
+    root.mkdir()
+    (root / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
+    assert main(["analyze", str(root), "--git-history", "--history-days", "30"]) == 0
+    output = capsys.readouterr().out
+    assert "Git history: unavailable (not_a_git_repository)" in output
+    assert "Risk: 0 high, 0 medium, 1 low" in output
+
+
+def test_invalid_history_days_is_argparse_exit_two(tmp_path, capsys):
+    with pytest.raises(SystemExit) as error:
+        main(["analyze", str(tmp_path), "--history-days", "0"])
+    assert error.value.code == 2
+    assert "1 to 3650" in capsys.readouterr().err
+
+
 def test_python_module_subprocess(tmp_path):
     root = copy_fixture(tmp_path)
     env = os.environ.copy()

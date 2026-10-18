@@ -27,6 +27,12 @@ class AnalysisOptions:
     exclude_patterns: tuple[str, ...] = ()
     max_file_size_bytes: int = 1_000_000
     excluded_paths: tuple[str, ...] = ()
+    git_history: bool = False
+    history_days: int = 180
+
+    def __post_init__(self) -> None:
+        if type(self.history_days) is not int or not 1 <= self.history_days <= 3650:
+            raise ValueError("history_days must be between 1 and 3650")
 
 
 @dataclass(frozen=True)

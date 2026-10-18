@@ -192,8 +192,8 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 
 ### 5.5 — Git history/churn ve risk
 
-- [ ] Güvenli (shell'siz, sınırlı) git log okuyucusu ile dosya bazlı churn; açıklanabilir risk seviyeleri.
-- [ ] Doğrula, belgele ve commit at.
+- [x] Güvenli (shell'siz, sınırlı) git log okuyucusu ile dosya bazlı churn; açıklanabilir risk seviyeleri.
+- [x] Doğrula, belgele ve commit at.
 
 ### 5.6 — Büyük class/fonksiyon ve coupling bulguları
 

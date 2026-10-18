@@ -14,8 +14,10 @@ from .languages.dart import DartParser
 from .languages.python import PythonParser, decode_source
 from .metrics import compute_metrics
 from .models import AnalysisDiagnostic, AnalysisOptions, AnalysisResult, DependencyEdge, FileRecord, ParsedFile
+from .risk import compute_risk
 from .scanner import scan_repository
 from .test_matching import match_tests
+from projectlens.git.history import GitHistoryUnavailable, read_git_history, unavailable_history
 
 
 _PARSERS: tuple[LanguageParser, ...] = (PythonParser(), DartParser())
@@ -121,6 +123,24 @@ def analyze(options: AnalysisOptions, *, largest_limit: int = 10) -> AnalysisRes
     metrics["test_matching"] = test_matching_metrics
     partial = any(item.analysis_status in {"unreadable", "skipped_size_limit", "parse_failed", "analyzed_with_diagnostics"} for item in records)
     partial = partial or any(item.error_type in _PARTIAL_SCAN_DIAGNOSTICS | {"UnreadablePubspec", "UnreadableManifest", "InvalidPubspecName", "DartUriEscapesRepository"} for item in diagnostics)
+    history_metrics = None
+    churn_for_risk = None
+    if options.git_history:
+        try:
+            history_metrics = read_git_history(root, [item.path for item in records], options.history_days)
+            churn_for_risk = history_metrics
+            history_metrics = {key: value for key, value in history_metrics.items() if not key.startswith("_")}
+        except Exception as exc:
+            reason = exc.reason if isinstance(exc, GitHistoryUnavailable) else "git_unavailable"
+            history_metrics = unavailable_history(options.history_days, reason)
+            if reason in {"git_unavailable", "output_limit"}:
+                diagnostics.append(AnalysisDiagnostic("git_history", None, "GitHistoryUnavailable", reason))
+                partial = True
+    if history_metrics is not None:
+        metrics["git_history"] = history_metrics
+    else:
+        churn_for_risk = None
+    metrics["risk"] = compute_risk(records, dependency.edges, dependency.cycle_groups, test_matches, churn_for_risk)
     metrics["health"] = compute_health(records, dependency.edges, dependency.cycle_groups, dependency.unresolved_imports, metrics, partial)
 
     return AnalysisResult(
