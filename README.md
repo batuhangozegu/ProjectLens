@@ -81,6 +81,11 @@ and BLOCKED tasks remain in the denominator. An empty roadmap reports a null
 percentage and `state: "empty"`. This is manual task status only; analysis-based
 estimates are not included.
 
+Code-aware estimates are available separately at
+`GET /api/v1/projects/PROJECT_ID/tasks/TASK_ID/assessment` and
+`GET /api/v1/projects/PROJECT_ID/roadmap/assessment`. They report snapshot
+evidence and uncertainty without changing or blending into manual progress.
+
 ## Run tests
 
 From the repository root, the default test run uses isolated temporary SQLite

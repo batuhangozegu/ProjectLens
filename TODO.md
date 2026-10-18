@@ -156,11 +156,11 @@ Tasarım `docs/ARCHITECTURE.md` içindeki "Code-aware tracking tasarımı" böl�
 - [x] `/projects/{id}/tasks/{task_id}/links` ve `/criteria` CRUD uçları (yol doğrulama, sınırlar).
 - [x] SQLite + PostgreSQL testleri; doğrula ve commit at.
 
-### 4.3 — Değerlendirme uçları (sıradaki adım)
+### 4.3 — Değerlendirme uçları
 
-- [ ] `GET /projects/{id}/tasks/{task_id}/assessment?snapshot=latest|<id>` (4.1 motoru + 4.2 verisi).
-- [ ] `GET /projects/{id}/roadmap/assessment` proje özeti (belirsizlik ve sapma sayıları dahil).
-- [ ] API testleri, belgeler; doğrula ve commit at.
+- [x] `GET /projects/{id}/tasks/{task_id}/assessment?snapshot=latest|<id>` (4.1 motoru + 4.2 verisi).
+- [x] `GET /projects/{id}/roadmap/assessment` proje özeti (belirsizlik ve sapma sayıları dahil).
+- [x] API testleri, belgeler; doğrula ve commit at.
 
 ## 5 — Analiz çekirdeğini genişletme
 
