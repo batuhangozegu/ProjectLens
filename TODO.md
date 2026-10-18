@@ -202,7 +202,7 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 
 ### 5.7 — Complexity ve duplication değerlendirmesi
 
-- [ ] İhtiyaç ve maliyeti değerlendir; gerekiyorsa ayrı küçük adımlara böl, gerekmiyorsa kararı belgele.
+- [x] İhtiyaç ve maliyeti değerlendir; karar: şimdilik eklenmiyor, gerekçe ve tetikleyiciler `docs/ARCHITECTURE.md` "Complexity and duplication decision (5.7)" bölümünde.
 
 ## 6 — İsteğe bağlı AI katmanı
 
