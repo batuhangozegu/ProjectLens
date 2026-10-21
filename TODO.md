@@ -207,16 +207,16 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 ## 6 — İsteğe bağlı AI katmanı
 
 - [x] Structured context seçimi, boyut sınırları ve kaynak referanslarını tasarla.
-- [ ] Repository/architecture/risk açıklamalarını ekle.
+- [x] Repository/architecture/risk açıklamalarını ekle.
 - [ ] Onboarding ve task önerilerini kullanıcı onayıyla uygulanacak öneriler olarak sun.
 - [x] Repository içeriğini güvenilmeyen veri olarak ele al; context'e tüm repository'yi gönderme.
-- [ ] Sağlayıcı maliyeti, veri aktarımı ve hata davranışını belgele/test et.
+- [x] Sağlayıcı maliyeti, veri aktarımı ve hata davranışını belgele/test et.
 
 ## 7 — Frontend (en son)
 
 - [x] React + TypeScript + Vite uygulamasını kur.
 - [x] Uygun açık kaynak graph kütüphanesini değerlendir ve seç.
-- [ ] Project listesi ve overview ekranını ekle.
+- [x] Project listesi ve overview ekranını ekle.
 - [ ] File tree, dependency graph ve node detaylarını ekle.
 - [ ] Metrics, health, risks ve activity ekranlarını ekle.
 - [ ] Roadmap ve code-aware tracking görünümünü ekle.
