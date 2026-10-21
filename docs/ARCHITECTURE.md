@@ -207,6 +207,14 @@ Only analyzed files contribute. Test files and generated Dart files (`*.g.dart`,
 
 ### Complexity and duplication decision (5.7)
 
+### AI context selection (6.1)
+
+`projectlens.ai.context.build_context()` is a pure, standard-library selector over a stored `AnalysisResult` JSON dictionary. It accepts `overview`, `architecture`, `risk`, or `onboarding` purpose and returns a versioned envelope with ordered sections, source references, omission reasons, and canonical UTF-8 JSON byte accounting. The default budget is 16 KiB; callers may choose a budget of at least 1024 bytes. The result guarantees `budget.used_bytes <= budget.max_bytes`. Missing optional snapshot fields (including health, risk, findings, frameworks, and test matches) are treated as unavailable.
+
+Selection is purpose-specific: overview prioritizes summary and health; architecture prioritizes graph, frameworks, and test matches; risk prioritizes risk, health, and findings; onboarding prioritizes frameworks, test matches, and findings. Lower-priority sections are dropped first when space runs out. File, edge, framework, test-match, and finding lists are capped at 10 items; repository-derived strings are control-character-stripped and capped at 240 characters with a truncation marker. Focus paths move matching file records to the front of the file sample. Sections include references such as `{"kind":"file","path":"src/a.py"}` and `{"kind":"metric","key":"metrics.health"}`. File contents are never selected.
+
+Repository-derived strings are untrusted data, not instructions. The output states this explicitly, and `render_prompt_block()` serializes the JSON inside a delimited `<projectlens_context>` block while escaping embedded closing delimiters. The helper does not call a provider, transmit data, or decide whether a user request should be sent.
+
 **Karar: şimdilik eklenmiyor.** Her ikisi de ayrı, ihtiyaç doğduğunda açılacak adımlardır; mevcut milestone'lar (frontend, isteğe bağlı AI katmanı) bunlara bağımlı değildir.
 
 - **Complexity (siklomatik vb.).** Python için `ast` ile ucuz ve doğru hesaplanır; Dart için ise parser şu an yalnızca bildirim düzeyinde bir lexer'dır (ifade/kontrol akışı ağacı yok), yani aynı metrik dil bazında farklı güvenilirlikte olurdu. Tek dilde doğru, diğerinde yaklaşık bir metriği aynı skorda göstermek yanıltıcı olur. 5.6'daki satır aralığına dayalı büyük sembol bulguları şu an yeterli ve açıkça "karmaşıklık değil, boyut" diye etiketlidir. Eklenirse: yalnızca Python, ayrı `complexity` metriği, formül sürümü ve "Dart için mevcut değil" notuyla; health/risk formüllerine ancak ayrı bir sürüm artışıyla girer.
