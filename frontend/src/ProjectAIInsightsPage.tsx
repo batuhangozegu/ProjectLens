@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { ApiError, api, type ProjectSummary } from './api/client';
 import { AIExplanationResult, type AIExplanation } from './AIExplanationResult';
+import { ProjectPageChrome } from './PageChrome';
 
 const kinds = [
   { value: 'repository', label: 'Repository overview' },
@@ -49,13 +50,12 @@ export function ProjectAIInsightsPage({ projectId }: { projectId: number }) {
     finally { setRequesting(false); }
   }
 
-  if (loading) return <main className="shell"><p role="status">Loading AI insights…</p></main>;
-  if (error && !project) return <main className="shell"><nav aria-label="Breadcrumb"><a href={`#/projects/${projectId}`}>← Project overview</a> · <a href="#/">All projects</a></nav><p role="alert" className="error">{error}</p></main>;
-  if (!project) return <main className="shell"><p role="alert" className="error">Project unavailable.</p></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="AI" /><h1>AI insights</h1><p role="status">Loading AI insights…</p></main>;
+  if (error && !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="AI" /><h1>AI insights</h1><p role="alert" className="error">{error}</p><button className="secondary" onClick={() => location.reload()}>Try again</button></main>;
+  if (!project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="AI" /><h1>AI insights</h1><p role="alert" className="error">Project unavailable.</p><button className="secondary" onClick={() => location.reload()}>Try again</button></main>;
 
-  return <main className="shell">
-    <header className="site-header"><a className="brand" href="#/"><span className="mark" aria-hidden="true">PL</span>ProjectLens</a></header>
-    <nav aria-label="Breadcrumb"><a href={`#/projects/${projectId}`}>← {project.name} overview</a></nav>
+  return <main id="main-content" tabIndex={-1} className="shell">
+    <ProjectPageChrome projectId={projectId} current="AI" />
     <section className="page-intro"><p className="eyebrow">OPTIONAL AI INSIGHTS</p><h1>{project.name}</h1><p>Request an AI explanation of the latest saved analysis. Nothing is sent until you submit a request.</p></section>
     <section className="notice ai-data-note" aria-labelledby="ai-data-title">
       <h2 id="ai-data-title">What is sent</h2>

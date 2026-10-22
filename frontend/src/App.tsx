@@ -5,6 +5,7 @@ import { ProjectFilesPage } from './ProjectFilesPage';
 import { ProjectInsightsPage } from './ProjectInsightsPage';
 import { ProjectRoadmapPage } from './ProjectRoadmapPage';
 import { ProjectAIInsightsPage } from './ProjectAIInsightsPage';
+import { PageFrame, ProjectPageChrome, SiteHeader } from './PageChrome';
 
 const unavailable = 'not available';
 function record(value: unknown): Record<string, any> { return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {}; }
@@ -71,8 +72,8 @@ export function ProjectListPage() {
     finally { setCreating(false); }
   }
 
-  return <main className="shell">
-    <header className="site-header"><a className="brand" href="#/" aria-label="ProjectLens home"><span className="mark" aria-hidden="true">PL</span>ProjectLens</a></header>
+  return <main id="main-content" tabIndex={-1} className="shell">
+    <SiteHeader />
     <section className="page-intro"><p className="eyebrow">REPOSITORY INSIGHT</p><h1>Your projects</h1><p>Connect a public GitHub repository to explore its structure and health.</p></section>
     <section className="panel" aria-labelledby="create-title"><h2 id="create-title">Add a project</h2><form onSubmit={create} noValidate>
       <label htmlFor="repository-url">GitHub repository URL</label><div className="form-row"><input id="repository-url" type="url" autoComplete="url" placeholder="https://github.com/owner/repository" value={url} onChange={(e) => setUrl(e.target.value)} aria-describedby={formError ? 'form-error' : undefined} /><button disabled={creating}>{creating ? 'Adding…' : 'Add project'}</button></div>
@@ -105,8 +106,8 @@ export function ProjectOverviewPage({ projectId }: { projectId: number }) {
     })();
     return () => { alive = false; };
   }, [projectId]);
-  if (loading) return <main className="shell"><p role="status">Loading project…</p></main>;
-  if (error || !project) return <main className="shell"><a href="#/">← All projects</a><p role="alert" className="error">{error || 'Project unavailable.'}</p></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Overview" /><h1>Project overview</h1><p role="status">Loading project…</p></main>;
+  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Overview" /><section className="page-intro"><h1>Project overview</h1><p role="alert" className="error">{error || 'Project unavailable.'}</p><button className="secondary" onClick={() => location.reload()}>Try again</button></section></main>;
   const metrics = record(result?.metrics), physical = record(metrics.physical_loc), python = record(metrics.python_loc);
   const health = record(metrics.health), risk = record(metrics.risk), findings = record(metrics.findings);
   const riskCounts = record(risk.counts_by_level);
@@ -116,8 +117,8 @@ export function ProjectOverviewPage({ projectId }: { projectId: number }) {
   const languageText = languages.size ? [...languages].sort((a,b) => b[1]-a[1]).map(([name,count]) => `${name} (${count})`).join(', ') : unavailable;
   const healthReasons = Array.isArray(health.components) ? health.components.filter((c: any) => c?.reason).map((c: any) => String(c.reason)) : [];
   const topFindings = Array.isArray(findings.top_findings) ? findings.top_findings : Array.isArray(findings.items) ? findings.items : [];
-  return <main className="shell">
-    <header className="site-header"><a className="brand" href="#/"><span className="mark" aria-hidden="true">PL</span>ProjectLens</a></header>
+  return <main id="main-content" tabIndex={-1} className="shell">
+    <ProjectPageChrome projectId={projectId} current="Overview" />
     <nav aria-label="Breadcrumb"><a href="#/">← All projects</a></nav>
     <section className="page-intro"><p className="eyebrow">PROJECT OVERVIEW</p><h1>{project.name}</h1><p>{project.repository_url || unavailable} · default branch: {show(project.default_branch)}</p></section>
     <p className="page-links"><a className="files-link" href={`#/projects/${projectId}/files`}>Explore files and dependencies →</a><a className="files-link" href={`#/projects/${projectId}/insights`}>Metrics, health, risks and activity →</a><a className="files-link" href={`#/projects/${projectId}/roadmap`}>Roadmap and code-aware tracking →</a><a className="files-link" href={`#/projects/${projectId}/ai`}>Optional AI explanations →</a></p>
@@ -138,4 +139,6 @@ export function ProjectOverviewPage({ projectId }: { projectId: number }) {
 
 function Metric({ label, value, detail }: { label: string; value: unknown; detail?: string }) { return <article className="metric"><h2>{label}</h2><p>{show(value)}</p>{detail && <small>{detail}</small>}</article>; }
 
-export default function App() { const route = useRoute(); return route.projectId === null ? <ProjectListPage /> : route.files ? <ProjectFilesPage projectId={route.projectId} /> : route.insights ? <ProjectInsightsPage projectId={route.projectId} /> : route.roadmap ? <ProjectRoadmapPage projectId={route.projectId} /> : route.ai ? <ProjectAIInsightsPage projectId={route.projectId} /> : <ProjectOverviewPage projectId={route.projectId} />; }
+export function NotFoundPage() { return <main id="main-content" className="shell" tabIndex={-1}><header className="site-header"><a className="brand" href="#/"><span className="mark" aria-hidden="true">PL</span>ProjectLens</a></header><section className="page-intro"><p className="eyebrow">PAGE NOT FOUND</p><h1>We couldn’t find that page</h1><p>The address may be incorrect or the page may have moved.</p><a href="#/">Return to projects</a></section></main>; }
+
+export default function App() { const route = useRoute(); const page = !route.known ? <NotFoundPage /> : route.projectId === null ? <ProjectListPage /> : route.files ? <ProjectFilesPage projectId={route.projectId} /> : route.insights ? <ProjectInsightsPage projectId={route.projectId} /> : route.roadmap ? <ProjectRoadmapPage projectId={route.projectId} /> : route.ai ? <ProjectAIInsightsPage projectId={route.projectId} /> : <ProjectOverviewPage projectId={route.projectId} />; return <PageFrame key={route.path}>{page}</PageFrame>; }

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import App from './App';
 
 const project = { id: 1, name: 'acme/demo', slug: 'acme-demo', repository_url: 'https://github.com/acme/demo', default_branch: 'main', created_at: '', updated_at: '', latest_snapshot: { id: 2, branch: 'main', commit_sha: 'abc', status: 'succeeded', partial: false, analyzer_schema_version: '1', file_count: 2, python_file_count: 1, python_loc: 24, edge_count: 1, cycle_group_count: 0, diagnostic_count: 0, created_at: '' } };
@@ -29,6 +29,25 @@ describe('project screens', () => {
   it('shows list errors', async () => {
     mockFetch({}); render(<App />);
     expect(await screen.findByRole('alert')).toHaveTextContent('Missing route');
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
+  it('renders unknown routes as not found with a home link', async () => {
+    location.hash = '#/some/unknown/path';
+    render(<App />);
+    expect(screen.getByRole('heading', { name: 'We couldn’t find that page' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Return to projects' })).toHaveAttribute('href', '#/');
+  });
+
+  it.each([
+    ['overview', '#/projects/1'], ['files', '#/projects/1/files'], ['insights', '#/projects/1/insights'],
+    ['roadmap', '#/projects/1/roadmap'], ['AI insights', '#/projects/1/ai'],
+  ])('shows a retryable error on the %s route', async (_name, path) => {
+    location.hash = path;
+    mockFetch({});
+    render(<App />);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Missing route');
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 
   it('validates create URL and creates successfully', async () => {
@@ -57,6 +76,9 @@ describe('project screens', () => {
     expect(screen.getByText('Few cycles')).toBeInTheDocument();
     expect(screen.getByText(/FastAPI/)).toBeInTheDocument();
     expect(screen.getByText(/Large module/)).toBeInTheDocument();
+    const nav = screen.getByRole('navigation', { name: 'Project navigation' });
+    expect(within(nav).getByRole('link', { name: 'Files' })).toHaveAttribute('href', '#/projects/1/files');
+    expect(within(nav).getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page');
   });
 
   it('shows unavailable for optional fields missing in older result schema', async () => {
@@ -65,5 +87,11 @@ describe('project screens', () => {
     mockFetch({ '/projects/1': project, '/projects/1/snapshots/latest': older }); render(<App />);
     await screen.findByRole('heading', { name: 'acme/demo' });
     expect(screen.getAllByText('not available').length).toBeGreaterThan(2);
+  });
+
+  it('shows an empty analysis state when there is no completed snapshot', async () => {
+    location.hash = '#/projects/1';
+    mockFetch({ '/projects/1': { ...project, latest_snapshot: null } }); render(<App />);
+    expect(await screen.findByText('Analysis is queued or no snapshot has completed yet.')).toHaveAttribute('role', 'status');
   });
 });

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, type ProjectSummary, type RoadmapProgress, type TaskAssessment, type TaskList, type TaskResponse, type TaskStatus } from './api/client';
 import { RoadmapProgressSummary } from './RoadmapProgressSummary';
 import { TaskTrackingCard } from './TaskTrackingCard';
+import { ProjectPageChrome } from './PageChrome';
 
 const statusOrder: TaskStatus[] = ['IN_PROGRESS', 'TODO', 'BLOCKED', 'DONE'];
 const statusLabels: Record<TaskStatus, string> = { TODO: 'To do', IN_PROGRESS: 'In progress', DONE: 'Done', BLOCKED: 'Blocked' };
@@ -62,12 +63,11 @@ export function ProjectRoadmapPage({ projectId }: { projectId: number }) {
     } catch { /* The status is saved; the next page load refreshes derived data. */ }
   }
 
-  if (loading) return <main className="shell"><p role="status">Loading roadmap…</p></main>;
-  if (error || !project || !progress) return <main className="shell"><nav aria-label="Breadcrumb"><a href={`#/projects/${projectId}`}>← Project overview</a> · <a href="#/">All projects</a></nav><p role="alert" className="error">{error || 'Roadmap unavailable.'}</p></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Roadmap" /><h1>Roadmap</h1><p role="status">Loading roadmap…</p></main>;
+  if (error || !project || !progress) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Roadmap" /><h1>Roadmap</h1><p role="alert" className="error">{error || 'Roadmap unavailable.'}</p><button className="secondary" onClick={() => location.reload()}>Try again</button></main>;
   const grouped = Object.fromEntries(statusOrder.map((status) => [status, tasks.filter((task) => task.status === status)])) as Record<TaskStatus, TaskResponse[]>;
-  return <main className="shell">
-    <header className="site-header"><a className="brand" href="#/"><span className="mark" aria-hidden="true">PL</span>ProjectLens</a></header>
-    <nav aria-label="Breadcrumb"><a href={`#/projects/${projectId}`}>← {project.name} overview</a></nav>
+  return <main id="main-content" tabIndex={-1} className="shell">
+    <ProjectPageChrome projectId={projectId} current="Roadmap" />
     <section className="page-intro"><p className="eyebrow">ROADMAP AND CODE-AWARE TRACKING</p><h1>{project.name}</h1><p>Manual task status and analysis-based evidence are shown separately. Code evidence never changes the manual status.</p></section>
     <RoadmapProgressSummary progress={progress} />
     {tasks.length === 0 ? <section className="empty roadmap-empty"><h2>No roadmap tasks</h2><p>Send the contents of the repository’s TODO.md checklist to the roadmap import API. Importing is repeatable and preserves manual task edits; tasks can also be created through the tasks API.</p><code>POST /api/v1/projects/{projectId}/roadmap/import</code><pre><code>{'{ "markdown": "- [ ] Example task" }'}</code></pre></section> : <section aria-label="Roadmap tasks" className="roadmap-groups">

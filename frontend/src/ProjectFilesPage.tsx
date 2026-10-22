@@ -3,6 +3,7 @@ import { api, type AnalysisResult, type ProjectSummary } from './api/client';
 import { FileTree } from './FileTree';
 import { DependencyGraph } from './DependencyGraph';
 import { FileDetails } from './FileDetails';
+import { ProjectPageChrome } from './PageChrome';
 
 export function ProjectFilesPage({ projectId }: { projectId: number }) {
   const [project, setProject] = useState<ProjectSummary | null>(null);
@@ -23,11 +24,10 @@ export function ProjectFilesPage({ projectId }: { projectId: number }) {
     })();
     return () => { alive = false; };
   }, [projectId]);
-  if (loading) return <main className="shell"><p role="status">Loading files and dependencies…</p></main>;
-  if (error || !project) return <main className="shell"><nav aria-label="Breadcrumb"><a href={`#/projects/${projectId}`}>← Project overview</a> · <a href="#/">All projects</a></nav><p role="alert" className="error">{error || 'Project unavailable.'}</p></main>;
-  return <main className="shell">
-    <header className="site-header"><a className="brand" href="#/"><span className="mark" aria-hidden="true">PL</span>ProjectLens</a></header>
-    <nav aria-label="Breadcrumb"><a href={`#/projects/${projectId}`}>← {project.name} overview</a></nav>
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Files" /><h1>Files and dependencies</h1><p role="status">Loading files and dependencies…</p></main>;
+  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Files" /><h1>Files and dependencies</h1><p role="alert" className="error">{error || 'Project unavailable.'}</p><button className="secondary" onClick={() => location.reload()}>Try again</button></main>;
+  return <main id="main-content" tabIndex={-1} className="shell">
+    <ProjectPageChrome projectId={projectId} current="Files" />
     <section className="page-intro"><p className="eyebrow">FILES AND DEPENDENCIES</p><h1>{project.name}</h1><p>Browse repository files and select a file to inspect its dependencies and analysis details.</p></section>
     {!result ? <div className="notice" role="status">{project.latest_snapshot ? 'Analysis result is not available.' : 'Analysis is queued or no snapshot has completed yet.'}</div> : <>
       {result.partial && <aside className="notice">This is a partial analysis. Some file details may be incomplete.</aside>}

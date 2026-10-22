@@ -38,6 +38,7 @@ export function DependencyGraph({ result, selectedPath, onSelect }: { result: An
   }, [visibleFiles, result.dependency_edges, result.cycles, selectedPath]);
   const omitted = result.files.length - visibleFiles.length;
   return <section className="graph-section" aria-label="Dependency graph">
+    <p className="graph-key">The repository file tree provides a keyboard accessible alternative for selecting files.</p>
     {omitted > 0 && <p className="notice graph-notice" role="status">Showing {visibleFiles.length} of {result.files.length} files in the graph. {omitted} files are omitted; use the file tree to select any file.</p>}
     {visibleFiles.length ? <div className="graph-canvas"><ReactFlow nodes={nodes} edges={edges} fitView fitViewOptions={{ padding: .2 }} nodesDraggable={false} nodesConnectable={false} onNodeClick={(_, node) => onSelect(node.id)} aria-label="File dependency graph"><Background color="#cbd5e1" gap={24} /><Controls /></ReactFlow></div> : <p className="empty">No files to display in the dependency graph.</p>}
     <p className="graph-key"><span className="cycle-swatch" aria-hidden="true" /> Highlighted nodes belong to a reported cycle.</p>

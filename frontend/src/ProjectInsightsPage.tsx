@@ -4,6 +4,7 @@ import { InsightsMetrics } from './InsightsMetrics';
 import { InsightsHealth } from './InsightsHealth';
 import { InsightsRisks } from './InsightsRisks';
 import { InsightsActivity } from './InsightsActivity';
+import { ProjectPageChrome } from './PageChrome';
 
 export function ProjectInsightsPage({ projectId }: { projectId: number }) {
   const [project, setProject] = useState<ProjectSummary | null>(null);
@@ -24,11 +25,10 @@ export function ProjectInsightsPage({ projectId }: { projectId: number }) {
     return () => { alive = false; };
   }, [projectId]);
 
-  if (loading) return <main className="shell"><p role="status">Loading project insights…</p></main>;
-  if (error || !project) return <main className="shell"><nav aria-label="Breadcrumb"><a href={`#/projects/${projectId}`}>← Project overview</a> · <a href="#/">All projects</a></nav><p role="alert" className="error">{error || 'Project unavailable.'}</p></main>;
-  return <main className="shell">
-    <header className="site-header"><a className="brand" href="#/"><span className="mark" aria-hidden="true">PL</span>ProjectLens</a></header>
-    <nav aria-label="Breadcrumb"><a href={`#/projects/${projectId}`}>← {project.name} overview</a></nav>
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Insights" /><h1>Project insights</h1><p role="status">Loading project insights…</p></main>;
+  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Insights" /><h1>Project insights</h1><p role="alert" className="error">{error || 'Project unavailable.'}</p><button className="secondary" onClick={() => location.reload()}>Try again</button></main>;
+  return <main id="main-content" tabIndex={-1} className="shell">
+    <ProjectPageChrome projectId={projectId} current="Insights" />
     <section className="page-intro"><p className="eyebrow">PROJECT INSIGHTS</p><h1>{project.name}</h1><p>Repository metrics, explainable health and risk, and available Git activity.</p></section>
     {!result ? <div className="notice" role="status">{project.latest_snapshot ? 'Analysis result is not available.' : 'Analysis is queued or no snapshot has completed yet.'}</div> : <>
       {(result.partial || (result.diagnostics?.length ?? 0) > 0) && <aside className="notice" aria-label="Analysis diagnostics">{result.partial && <strong>Partial analysis. </strong>}{result.diagnostics?.length ? `${result.diagnostics.length} diagnostic${result.diagnostics.length === 1 ? '' : 's'} reported; some insights may be incomplete.` : 'Some insights may be incomplete.'}</aside>}

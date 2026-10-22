@@ -12,7 +12,7 @@ export function useRoute() {
   const insightsMatch = path.match(/^\/projects\/(\d+)\/insights\/?$/);
   const roadmapMatch = path.match(/^\/projects\/(\d+)\/roadmap\/?$/);
   const aiMatch = path.match(/^\/projects\/(\d+)\/ai\/?$/);
-  return { path, projectId: match ? Number(match[1]) : filesMatch ? Number(filesMatch[1]) : insightsMatch ? Number(insightsMatch[1]) : roadmapMatch ? Number(roadmapMatch[1]) : aiMatch ? Number(aiMatch[1]) : null, files: Boolean(filesMatch), insights: Boolean(insightsMatch), roadmap: Boolean(roadmapMatch), ai: Boolean(aiMatch) };
+  return { path, projectId: match ? Number(match[1]) : filesMatch ? Number(filesMatch[1]) : insightsMatch ? Number(insightsMatch[1]) : roadmapMatch ? Number(roadmapMatch[1]) : aiMatch ? Number(aiMatch[1]) : null, files: Boolean(filesMatch), insights: Boolean(insightsMatch), roadmap: Boolean(roadmapMatch), ai: Boolean(aiMatch), known: path === '/' || Boolean(match || filesMatch || insightsMatch || roadmapMatch || aiMatch) };
 }
 
 export function navigate(path: string) { location.hash = path; }
