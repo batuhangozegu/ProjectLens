@@ -42,6 +42,19 @@ input { width: 100%; min-width: 0; padding: 12px; border: 1px solid #bdc9d9; bor
 .metric small { display: block; }
 .panel li { margin: 8px 0; overflow-wrap: anywhere; }
 .files-link { display: inline-block; padding: 10px 14px; border-radius: 9px; background: #e8eef9; font-weight: 700; text-decoration: none; }
+.page-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.table-scroll { overflow-x: auto; }
+.panel table { width: 100%; border-collapse: collapse; text-align: left; line-height: 1.5; }
+.panel caption { padding: 0 0 10px; color: #58677d; text-align: left; }
+.panel th, .panel td { padding: 10px 12px; border-bottom: 1px solid #e4e9f1; vertical-align: top; }
+.panel th { font-weight: 700; }
+.health-score { display: flex; align-items: baseline; flex-wrap: wrap; gap: 14px; }
+.health-score strong { font-size: 1.5rem; }
+.health-score span, .muted { color: #58677d; }
+.ranked-list { padding-left: 1.8rem; }
+.ranked-list > li { margin: 14px 0; padding-left: 4px; }
+.ranked-list p { margin: 6px 0; }
+.rank { display: inline-block; min-width: 2.3em; }
 .files-layout { display: grid; grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 16px; align-items: start; }
 .file-tree, .file-details { min-width: 0; padding: 18px; border: 1px solid #dce3ed; border-radius: 12px; background: #fff; }
 .file-tree h2, .file-details h2 { margin: 0 0 12px; font-size: 1.1rem; }
@@ -85,6 +98,8 @@ input { width: 100%; min-width: 0; padding: 12px; border: 1px solid #bdc9d9; bor
   .tree-folder:hover, .tree-file:hover, .tree-file[aria-current="true"] { background: #293a58; }
   .tree-file small, .file-details dt, .graph-key, .file-tree h2 span { color: #aeb9ca; }
   .file-details section { border-color: #2a3950; }
+  .panel caption, .health-score span, .muted { color: #aeb9ca; }
+  .panel th, .panel td { border-color: #2a3950; }
   input { background: #111c2d; border-color: #3b4a61; color: #e8edf5; }
   .secondary { color: #dae4ff; background: #293a58; }
   .secondary:hover { background: #344b70; }

@@ -9,7 +9,8 @@ export function useRoute() {
   }, []);
   const match = path.match(/^\/projects\/(\d+)$/);
   const filesMatch = path.match(/^\/projects\/(\d+)\/files\/?$/);
-  return { path, projectId: match ? Number(match[1]) : filesMatch ? Number(filesMatch[1]) : null, files: Boolean(filesMatch) };
+  const insightsMatch = path.match(/^\/projects\/(\d+)\/insights\/?$/);
+  return { path, projectId: match ? Number(match[1]) : filesMatch ? Number(filesMatch[1]) : insightsMatch ? Number(insightsMatch[1]) : null, files: Boolean(filesMatch), insights: Boolean(insightsMatch) };
 }
 
 export function navigate(path: string) { location.hash = path; }

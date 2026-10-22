@@ -218,7 +218,7 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 - [x] Uygun açık kaynak graph kütüphanesini değerlendir ve seç.
 - [x] Project listesi ve overview ekranını ekle.
 - [x] File tree, dependency graph ve node detaylarını ekle.
-- [ ] Metrics, health, risks ve activity ekranlarını ekle.
+- [x] Metrics, health, risks ve activity ekranlarını ekle.
 - [ ] Roadmap ve code-aware tracking görünümünü ekle.
 - [ ] AI insights görünümünü ilgili backend hazırsa ekle.
 - [ ] Loading/error/empty durumları, erişilebilirlik ve frontend testlerini tamamla.
