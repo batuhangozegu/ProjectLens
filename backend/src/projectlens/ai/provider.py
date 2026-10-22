@@ -37,6 +37,10 @@ class AIInvalidResponseError(AIProviderError):
     pass
 
 
+class AIAuthFailedError(AIProviderError):
+    """The provider rejected credentials (or required credentials are missing)."""
+
+
 class AIProvider(Protocol):
     def complete(self, request: AIRequest) -> AIResponse: ...
 

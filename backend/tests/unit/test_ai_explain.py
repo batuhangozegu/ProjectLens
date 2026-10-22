@@ -1,7 +1,7 @@
 import pytest
 
 from projectlens.ai.explain import ExplainError, explain
-from projectlens.ai.provider import (AIResponse, AIUnavailableError, AITimeoutError,
+from projectlens.ai.provider import (AIAuthFailedError, AIResponse, AIUnavailableError, AITimeoutError,
                                     FakeProvider)
 
 
@@ -38,6 +38,15 @@ def test_timeout_does_not_retry():
     with pytest.raises(ExplainError) as caught:
         explain(snapshot(), "risk", provider, max_bytes=2048)
     assert caught.value.code == "ai_timeout"
+    assert len(provider.requests) == 1
+
+
+def test_auth_failure_does_not_retry():
+    provider = FakeProvider([AIAuthFailedError("private credential")])
+    with pytest.raises(ExplainError) as caught:
+        explain(snapshot(), "risk", provider, max_bytes=2048)
+    assert caught.value.code == "ai_auth_failed"
+    assert "private credential" not in str(caught.value)
     assert len(provider.requests) == 1
 
 

@@ -1,3 +1,5 @@
+Türkçe: [README.tr.md](README.tr.md)
+
 # ProjectLens
 
 ProjectLens is a local repository analyzer. The installable CLI scans repositories, parses Python and Dart without executing code, resolves Python imports and Dart file/package URIs, detects cycles, reports declared frameworks and source-to-test matches, calculates basic metrics, and can export deterministic JSON.
@@ -56,6 +58,12 @@ alembic upgrade head
 uvicorn --factory projectlens.app.api:create_app --host 127.0.0.1 --port 8000
 ```
 
+For a lightweight local setup, SQLite also works. From `backend/`, set
+`DATABASE_URL=sqlite:///./projectlens_dev.sqlite` in the process environment
+(PowerShell: `$env:DATABASE_URL = 'sqlite:///./projectlens_dev.sqlite'`), then run
+the same migration and uvicorn commands. PostgreSQL requires the `app` extra;
+use it for the API with either database.
+
 Create a project and start an analysis (replace the public GitHub URL with a repository you can access):
 
 ```sh
@@ -99,6 +107,75 @@ Code-aware estimates are available separately at
 `GET /api/v1/projects/PROJECT_ID/tasks/TASK_ID/assessment` and
 `GET /api/v1/projects/PROJECT_ID/roadmap/assessment`. They report snapshot
 evidence and uncertainty without changing or blending into manual progress.
+
+### Optional AI: bring your own key
+
+Set `AI_ENABLED=true` in the API process environment (PowerShell:
+`$env:AI_ENABLED = 'true'`) before starting uvicorn. With Compose, add that
+variable to the `api` service environment in a local Compose override; the
+default stack leaves AI disabled. AI is requested explicitly from the **Yapay
+Zeka** tab or API; opening a project does not send analysis to a provider.
+
+The key stays in the browser and is sent with each request. ProjectLens uses it
+only in request memory, forwards it to the selected provider as authentication,
+and never saves it, includes it in prompts, or logs AI header values. Select
+Anthropic, OpenAI, or an OpenAI-compatible server, specify a model, and supply
+your key (optional for compatible local servers). This backend supports the
+headers below; a web client must send them to use browser-held credentials.
+
+| Header | Value |
+| --- | --- |
+| `X-AI-Provider` | `anthropic`, `openai`, or `openai-compatible` |
+| `X-AI-Model` | Model ID (1–200 ASCII letters/digits and `._:/+@-`, starting with a letter/digit) |
+| `X-AI-Base-Url` | Compatible servers only: HTTP(S) URL with host, no userinfo/query/fragment; e.g. `http://localhost:11434` or `http://localhost:1234/v1` |
+| `X-AI-Key` | Key, at most 4,096 visible ASCII characters without whitespace |
+
+Anthropic defaults to `claude-haiku-4-5-20251001` and OpenAI to
+`gpt-4.1-mini`; both allow a model override. Compatible servers require an
+explicit installed model. No model list is fetched. See the official
+[Anthropic model documentation](https://platform.claude.com/docs/en/models/haiku-4-5/overview)
+and [OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-4.1-mini)
+for availability. A server root gets `/v1`; a supplied API prefix is preserved.
+The backend appends `/chat/completions`. In Docker, a host model server must be
+reachable from the API container; container localhost is separate from the host.
+
+Test a keyless local server without sending repository data:
+
+```sh
+curl -X POST http://127.0.0.1:8000/api/v1/ai/test \
+  -H 'X-AI-Provider: openai-compatible' \
+  -H 'X-AI-Model: YOUR_INSTALLED_MODEL' \
+  -H 'X-AI-Base-Url: http://localhost:11434'
+curl -X POST http://127.0.0.1:8000/api/v1/projects/PROJECT_ID/ai/explanations \
+  -H 'Content-Type: application/json' \
+  -H 'X-AI-Provider: openai-compatible' \
+  -H 'X-AI-Model: YOUR_INSTALLED_MODEL' \
+  -H 'X-AI-Base-Url: http://localhost:11434' \
+  -d '{"kind":"architecture","snapshot":"latest"}'
+```
+
+For hosted providers, send `X-AI-Key` as well. The test endpoint uses a fixed
+prompt with at most 16 output tokens and returns `{ok, provider, model}`.
+Explanations send a bounded selection of stored analysis metadata: relative
+file paths, counts, dependency samples, frameworks, test matches and relevant
+health/risk/findings with references. No source file contents, checkout,
+repository URL, Git credentials, tasks or full snapshot is sent. Metadata can
+still be sensitive. Limits default to `AI_MAX_CONTEXT_BYTES=16384`,
+`AI_MAX_OUTPUT_TOKENS=512`, `AI_TIMEOUT_S=20` (socket timeout per attempt).
+Provider responses above 64 KiB or text above 16 KiB are rejected.
+
+If every AI header is absent, the API can fall back to operator-provided process
+environment variables `PROJECTLENS_AI_PROVIDER`, `PROJECTLENS_AI_MODEL`,
+`PROJECTLENS_AI_BASE_URL`, `PROJECTLENS_AI_API_KEY`. ProjectLens never writes
+these settings; its database `.env` reader does not load AI variables. Any AI
+header selects an isolated request configuration requiring `X-AI-Provider`;
+environment keys are never mixed into it. With neither configuration, AI is
+unavailable. Both endpoints use the standard error envelope: invalid settings
+`422 validation_error`, missing/rejected key `401 ai_auth_failed`, timeout
+`503 ai_timeout`, unavailable `503 ai_unavailable`, invalid output
+`502 ai_invalid_response`. Only unavailable calls retry once. See
+[architecture](docs/ARCHITECTURE.md#ai-explanations-cost-and-data-transfer-6265)
+for the complete contract and data flow.
 
 ## Run tests
 
@@ -206,13 +283,13 @@ Expected exclusions and skipped symlinks alone do not make the pipeline result p
 - LOC is physical lines, including blank and comment lines.
 - Framework detection reports recognized dependencies declared in manifests; it does not mean the repository uses them in code. Source-to-test matches use resolved imports and filename/path heuristics; they are not coverage and do not report whether tests pass.
 - The health indicator is a heuristic based on static analysis, not a quality guarantee, correctness measure, or coverage measure. Missing or incomplete facts make individual components unavailable; older snapshots may not include `metrics.health`.
-- AI, project tracking, and frontend functionality are not included. The optional API and persistence layer are separate from the analyzer core and require the `app` extra.
+- Project tracking, optional AI explanations, and the web interface sit above the analyzer core. The API and persistence layer require the `app` extra. AI onboarding/task suggestions remain planned.
 - Repository code is never imported or executed.
 - ProjectLens JSON exports carry a `projectlens_format` marker. Existing marked JSON files within the scan size limit are excluded and reported as `Excluded`. The exact `--output` path is excluded for the current run, including when it is inside the analyzed tree.
 
 ## Project status
 
-Milestone 1 and the GitHub, persistence, and API portions of milestone 2 are implemented. The PostgreSQL test pass, Docker Compose deployment, and CI workflow are documented in step 2.4; Docker Compose has been run and verified locally. The roadmap for remaining work is in [TODO.md](TODO.md). See [architecture](docs/ARCHITECTURE.md) for analysis and API contracts.
+The analyzer, public GitHub analysis jobs, persistence/API, task roadmaps and evidence assessments, Python/Dart extensions, optional AI explanations, and React web interface are implemented. PostgreSQL tests, Docker Compose and CI are documented; Docker Compose was previously verified locally. AI onboarding/task suggestions, private repositories and other integrations remain planned in [TODO.md](TODO.md). See [architecture](docs/ARCHITECTURE.md) for analysis and API contracts.
 
 ## Web interface
 
@@ -225,6 +302,46 @@ npm run dev
 ```
 
 The dev server proxies `/api` to `http://localhost:8000`. See the [frontend README](frontend/README.md#using-the-app) for what each screen shows.
+
+Open the printed local URL (usually `http://localhost:5173`). On **Projeleriniz**,
+add a public GitHub URL and wait for analysis, then open a project. **Genel Bakış**
+shows its latest snapshot; **Dosyalar** shows the file tree and dependency graph;
+**Analizler** shows metrics, health, risk and available Git activity;
+**Yol Haritası** shows task status/progress beside code-based assessments
+(import Markdown through the API above); **Yapay Zeka** requests optional
+repository, architecture or risk explanations using the provider headers above.
+Project deletion is available from the list/overview and requires confirmation.
+
+## API summary
+
+All routes below use `/api/v1`; interactive API documentation is at `/docs`.
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /health` | API/database health |
+| `GET /projects`, `POST /projects` | List projects; create a project and enqueue analysis (202) |
+| `GET /projects/{id}`, `DELETE /projects/{id}` | Project details; cascade deletion (204, 404 if absent, 409 if analysis is active) |
+| `POST /projects/{id}/analyses`, `GET /jobs/{id}` | Enqueue analysis and poll its job |
+| `GET /projects/{id}/snapshots[/latest or /{snapshot_id}]` | Snapshot list or stored result |
+| `/projects/{id}/tasks` | Task list/create and task detail/update/delete |
+| `/projects/{id}/tasks/{task_id}/links` and `/criteria` | File links and acceptance criteria CRUD |
+| `POST /projects/{id}/roadmap/import` | Import Markdown checklist text; optional dry run |
+| `GET /projects/{id}/roadmap/progress` | Manual status progress |
+| `GET /projects/{id}/tasks/{task_id}/assessment`, `GET /projects/{id}/roadmap/assessment` | Snapshot-based evidence and uncertainty |
+| `POST /ai/test`, `POST /projects/{id}/ai/explanations` | Test provider connection; explain selected analysis metadata |
+
+## Security notes
+
+There is no authentication yet. Run the API and web client on localhost; do not
+expose them publicly. Project deletion and analysis endpoints are accessible to
+anyone who can reach the API. Only public HTTPS GitHub URLs are accepted; private
+repository authentication is not implemented. Repository code is never executed.
+Keep database credentials and provider keys out of version control. Browser AI
+keys are never stored by the server; disable header capture/wire debugging in
+external proxies or logging tools too. Compatible URLs intentionally allow local
+network model servers, so the API can initiate requests to those addresses.
+Use HTTPS for keys sent beyond localhost. AI answers are advisory: verify their
+references and the selected provider's data policy before sending metadata.
 
 ## Supported languages
 
