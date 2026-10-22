@@ -187,6 +187,16 @@ def list_projects(session: Session) -> list[Project]:
     return list(session.scalars(select(Project).order_by(Project.name, Project.id)))
 
 
+def delete_project(session: Session, project_id: int) -> bool:
+    """Delete a project and flush its database cascades; commit belongs to caller."""
+    project = get_project(session, project_id=project_id)
+    if project is None:
+        return False
+    session.delete(project)
+    session.flush()
+    return True
+
+
 def get_project_by_repository(session: Session, canonical_url: str) -> Project | None:
     return session.scalar(select(Project).where(Project.canonical_repository_url == canonical_url))
 
@@ -238,6 +248,16 @@ def find_active_job(session: Session, project_id: int, branch: str | None, commi
     else:
         query = query.where(AnalysisJob.requested_commit.is_(None), AnalysisJob.branch == branch)
     return session.scalar(query.order_by(AnalysisJob.id.desc()).limit(1))
+
+
+def find_active_project_job(session: Session, project_id: int) -> AnalysisJob | None:
+    """Return the newest queued or running job for a project, regardless of ref."""
+    return session.scalar(
+        select(AnalysisJob)
+        .where(AnalysisJob.project_id == project_id, AnalysisJob.status.in_(("queued", "running")))
+        .order_by(AnalysisJob.id.desc())
+        .limit(1)
+    )
 
 
 def mark_orphaned_jobs_interrupted(session: Session) -> int:

@@ -68,6 +68,11 @@ curl http://127.0.0.1:8000/api/v1/health
 
 The create endpoint returns immediately with project and job IDs; poll the returned `job_url` for completion. The API only accepts public HTTPS GitHub repository URLs.
 
+Delete a project and its snapshots, jobs, tasks, task links, and acceptance
+criteria with `DELETE /api/v1/projects/PROJECT_ID` (204). Deletion returns 404
+for an unknown project and 409 (`project_analysis_active`) while an analysis
+job is queued or running.
+
 ### Roadmap import and progress
 
 Import Markdown checklist text directly in the request body; the API does not

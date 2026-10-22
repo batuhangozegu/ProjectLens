@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import hashlib
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from projectlens.app.db.models import AnalysisJob, Project
 from projectlens.app.db.repository import (
-    create_analysis_job, create_project, find_active_job, get_analysis_job,
+    create_analysis_job, create_project, delete_project, find_active_job,
+    find_active_project_job, get_analysis_job,
     get_latest_snapshot, get_project, get_project_by_repository,
     get_snapshot_for_project, list_project_snapshots, list_projects,
 )
@@ -115,6 +116,21 @@ def project_detail(project_id: int, session: Session = Depends(get_session)):
     if project is None:
         raise HTTPException(404, detail={"code": "project_not_found", "message": "Project was not found."})
     return _project(project, session)
+
+
+@router.delete("/projects/{project_id}", status_code=204, responses={404: {"model": ErrorEnvelope}, 409: {"model": ErrorEnvelope}})
+def remove_project(project_id: int, request: Request, session: Session = Depends(get_session)):
+    # Serialize against enqueueing so a new job cannot be added between this
+    # active-job check and the cascade delete.
+    manager = request.app.state.job_manager
+    with manager.enqueue_lock:
+        if get_project(session, project_id=project_id) is None:
+            raise HTTPException(404, detail={"code": "project_not_found", "message": "Project was not found."})
+        if find_active_project_job(session, project_id) is not None:
+            raise HTTPException(409, detail={"code": "project_analysis_active", "message": "Project cannot be deleted while an analysis is queued or running."})
+        delete_project(session, project_id)
+        session.commit()
+    return Response(status_code=204)
 
 
 @router.get("/projects/{project_id}/snapshots", response_model=SnapshotList, responses={404: {"model": ErrorEnvelope}})
