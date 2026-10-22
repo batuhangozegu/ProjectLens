@@ -1,8 +1,9 @@
 import type { AnalysisResult } from './api/client';
+import { tr } from './i18n';
 
-const unavailable = 'Not available';
+const unavailable = tr.unavailable;
 const record = (value: unknown): Record<string, any> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
-const display = (value: unknown) => value === null || value === undefined || value === '' ? unavailable : String(value);
+const display = (value: unknown) => value === null || value === undefined || value === '' ? unavailable : typeof value === 'number' ? new Intl.NumberFormat('tr-TR').format(value) : String(value);
 
 export function InsightsMetrics({ result }: { result: AnalysisResult }) {
   const metrics = record(result.metrics);
@@ -11,18 +12,18 @@ export function InsightsMetrics({ result }: { result: AnalysisResult }) {
   for (const file of result.files ?? []) if (file.language) languages.set(file.language, (languages.get(file.language) ?? 0) + 1);
   const testMatches = record(metrics.test_matching);
   const tests = typeof testMatches.sources_total === 'number'
-    ? `${testMatches.sources_with_matching_test ?? 0} of ${testMatches.sources_total} source files matched`
-    : result.test_matches ? `${result.test_matches.filter((item) => item.tests?.length).length} source files matched` : unavailable;
+    ? `${tr.number.format(testMatches.sources_with_matching_test ?? 0)} / ${tr.number.format(testMatches.sources_total)} kaynak dosyayla eşleşti`
+    : result.test_matches ? `${tr.number.format(result.test_matches.filter((item) => item.tests?.length).length)} kaynak dosyayla eşleşti` : unavailable;
   const rows = [
-    ['Physical LOC', display(physical.total), physical.unavailable_file_count ? `${physical.unavailable_file_count} file counts unavailable` : 'All available file counts included'],
-    ['Files', display(metrics.total_file_count ?? result.files?.length), 'Repository files found in this snapshot'],
-    ['Languages', languages.size ? [...languages].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, count]) => `${name} (${count})`).join(', ') : result.files ? 'None detected' : unavailable, 'Counted from file records'],
-    ['Frameworks', result.frameworks?.length ? result.frameworks.map((item) => `${item.name} (${item.ecosystem})`).join(', ') : result.frameworks ? 'None detected' : unavailable, 'Detected from manifest declarations'],
-    ['Test matches', tests, 'Name/import heuristic; this is not test coverage'],
+    ['Fiziksel satır sayısı', display(physical.total), physical.unavailable_file_count ? `${tr.number.format(physical.unavailable_file_count)} dosyanın satır sayısı kullanılamıyor` : 'Erişilebilen tüm dosya sayıları dahil'],
+    ['Dosyalar', display(metrics.total_file_count ?? result.files?.length), 'Bu anlık görüntüde bulunan depo dosyaları'],
+    ['Diller', languages.size ? [...languages].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, count]) => `${name} (${tr.number.format(count)})`).join(', ') : result.files ? 'Algılanmadı' : unavailable, 'Dosya kayıtlarından sayıldı'],
+    ['Çatılar', result.frameworks?.length ? result.frameworks.map((item) => `${item.name} (${item.ecosystem})`).join(', ') : result.frameworks ? 'Algılanmadı' : unavailable, 'Bildirim dosyalarından algılandı'],
+    ['Test eşleşmeleri', tests, 'Ad/aktarim sezgiseli; test kapsamı değildir'],
   ];
   return <section className="panel" aria-labelledby="insights-metrics-title">
-    <h2 id="insights-metrics-title">Metrics</h2>
-    <div className="table-scroll"><table><caption>Repository size, technology and test matching summary</caption><thead><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Details</th></tr></thead>
+    <h2 id="insights-metrics-title">Ölçümler</h2>
+    <div className="table-scroll"><table><caption>Depo boyutu, teknolojiler ve test eşleşmeleri özeti</caption><thead><tr><th scope="col">Ölçüm</th><th scope="col">Değer</th><th scope="col">Ayrıntılar</th></tr></thead>
       <tbody>{rows.map(([name, value, detail]) => <tr key={name}><th scope="row">{name}</th><td>{value}</td><td>{detail}</td></tr>)}</tbody></table></div>
   </section>;
 }

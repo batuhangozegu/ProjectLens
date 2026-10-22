@@ -27,14 +27,14 @@ describe('project AI insights page', () => {
     vi.stubGlobal('fetch', fetchMock);
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'acme/demo' })).toBeInTheDocument();
-    expect(screen.getByText(/small, selected context/)).toBeInTheDocument();
+    expect(screen.getByText(/seçilmiş küçük bir bağlamı/)).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/ai/explanations'))).toBe(false);
 
-    fireEvent.change(screen.getByLabelText('Explanation type'), { target: { value: 'architecture' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Request AI explanation' }));
+    fireEvent.change(screen.getByLabelText('Açıklama türü'), { target: { value: 'architecture' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Yapay zeka açıklaması iste' }));
     expect(await screen.findByText('The app has a small dependency graph.')).toBeInTheDocument();
-    expect(screen.getByText('AI-GENERATED · ADVISORY')).toBeInTheDocument();
-    expect(screen.getByText(/untrusted advice/)).toBeInTheDocument();
+    expect(screen.getByText('YAPAY ZEKA \u00dcRET\u0130M\u0130 \u00b7 \u00d6NER\u0130 N\u0130TEL\u0130\u011e\u0130NDE')).toBeInTheDocument();
+    expect(screen.getByText(/do\u011frulanmam\u0131\u015f kabul edin/)).toBeInTheDocument();
     expect(screen.getByText('src/app.py · file')).toBeInTheDocument();
     const request = fetchMock.mock.calls.find(([input]) => String(input).includes('/ai/explanations'));
     expect(JSON.parse(String(request?.[1]?.body))).toEqual({ kind: 'architecture', snapshot: 'latest' });
@@ -42,28 +42,28 @@ describe('project AI insights page', () => {
 
   it('explains disabled and unconfigured provider responses in plain language', async () => {
     installFetch(undefined, 503, 'ai_disabled'); render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Request AI explanation' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('AI explanations are disabled by the server');
+    fireEvent.click(await screen.findByRole('button', { name: 'Yapay zeka açıklaması iste' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Sunucu yapay zeka açıklamalarını devre dışı bırakmış');
   });
 
   it('explains provider unavailability, context size and rate limits', async () => {
     installFetch(undefined, 503, 'ai_unavailable'); render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Request AI explanation' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('unavailable or not configured');
+    fireEvent.click(await screen.findByRole('button', { name: 'Yapay zeka açıklaması iste' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('kullanılamıyor veya yapılandırılmamış');
     cleanup();
     installFetch(undefined, 413, 'context_too_large'); render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Request AI explanation' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('size limit');
+    fireEvent.click(await screen.findByRole('button', { name: 'Yapay zeka açıklaması iste' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('boyut sınırını aştı');
     cleanup();
     installFetch(undefined, 429, 'rate_limited'); render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Request AI explanation' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('too many requests');
+    fireEvent.click(await screen.findByRole('button', { name: 'Yapay zeka açıklaması iste' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('çok fazla istek');
   });
 
   it('disables requests when there is no completed snapshot', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => Response.json({ ...project, latest_snapshot: null })));
     render(<App />);
-    expect(await screen.findByRole('button', { name: 'Request AI explanation' })).toBeDisabled();
-    expect(screen.getByRole('status')).toHaveTextContent('No completed analysis is available yet');
+    expect(await screen.findByRole('button', { name: 'Yapay zeka açıklaması iste' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Henüz tamamlanmış analiz yok');
   });
 });

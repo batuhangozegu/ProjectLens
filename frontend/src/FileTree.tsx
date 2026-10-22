@@ -26,10 +26,10 @@ export function FileTree({ files, selectedPath, onSelect }: { files: FileRecord[
       const isDirectory = child.children.size > 0;
       return <li key={child.path}>
         {isDirectory && <button className="tree-folder" aria-expanded={!closed.has(child.path)} onClick={() => setClosed((previous) => { const next = new Set(previous); next.has(child.path) ? next.delete(child.path) : next.add(child.path); return next; })}>{closed.has(child.path) ? '▸' : '▾'} {child.name}/</button>}
-        {child.file && <button className="tree-file" aria-current={selectedPath === child.path ? 'true' : undefined} onClick={() => onSelect(child.path)}><span aria-hidden="true">{isDirectory ? '↳ ' : ''}</span>{child.name}<small>{child.file.language || 'Unknown'} · {child.file.physical_loc ?? '—'} LOC</small></button>}
+        {child.file && <button className="tree-file" aria-current={selectedPath === child.path ? 'true' : undefined} onClick={() => onSelect(child.path)}><span aria-hidden="true">{isDirectory ? '↳ ' : ''}</span>{child.name}<small>{child.file.language || 'Bilinmiyor'} · {child.file.physical_loc === null ? '—' : new Intl.NumberFormat('tr-TR').format(child.file.physical_loc)} satır</small></button>}
         {isDirectory && !closed.has(child.path) && renderNodes(child)}
       </li>;
     })}</ul>;
   }
-  return <nav className="file-tree" aria-label="Repository files"><h2>Files <span>({files.length})</span></h2>{files.length ? renderNodes(tree) : <p className="empty">No files in this analysis.</p>}</nav>;
+  return <nav className="file-tree" aria-label="Depo dosyaları"><h2>Dosyalar <span>({new Intl.NumberFormat('tr-TR').format(files.length)})</span></h2>{files.length ? renderNodes(tree) : <p className="empty">Bu analizde dosya yok.</p>}</nav>;
 }

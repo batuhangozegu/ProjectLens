@@ -5,6 +5,7 @@ import { InsightsHealth } from './InsightsHealth';
 import { InsightsRisks } from './InsightsRisks';
 import { InsightsActivity } from './InsightsActivity';
 import { ProjectPageChrome } from './PageChrome';
+import { tr } from './i18n';
 
 export function ProjectInsightsPage({ projectId }: { projectId: number }) {
   const [project, setProject] = useState<ProjectSummary | null>(null);
@@ -19,19 +20,19 @@ export function ProjectInsightsPage({ projectId }: { projectId: number }) {
         if (!alive) return;
         setProject(current);
         if (current.latest_snapshot) setResult(await api.get<AnalysisResult>(`/projects/${projectId}/snapshots/latest`));
-      } catch (e) { if (alive) setError(e instanceof Error ? e.message : 'Could not load project insights.'); }
+      } catch (e) { if (alive) setError(e instanceof Error ? e.message : 'Proje analizleri yüklenemedi.'); }
       finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; };
   }, [projectId]);
 
-  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Insights" /><h1>Project insights</h1><p role="status">Loading project insights…</p></main>;
-  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Insights" /><h1>Project insights</h1><p role="alert" className="error">{error || 'Project unavailable.'}</p><button className="secondary" onClick={() => location.reload()}>Try again</button></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.insights} /><h1>Proje analizleri</h1><p role="status">Proje analizleri yükleniyor…</p></main>;
+  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.insights} /><h1>Proje analizleri</h1><p role="alert" className="error">{error || 'Proje kullanılamıyor.'}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
   return <main id="main-content" tabIndex={-1} className="shell">
-    <ProjectPageChrome projectId={projectId} current="Insights" />
-    <section className="page-intro"><p className="eyebrow">PROJECT INSIGHTS</p><h1>{project.name}</h1><p>Repository metrics, explainable health and risk, and available Git activity.</p></section>
-    {!result ? <div className="notice" role="status">{project.latest_snapshot ? 'Analysis result is not available.' : 'Analysis is queued or no snapshot has completed yet.'}</div> : <>
-      {(result.partial || (result.diagnostics?.length ?? 0) > 0) && <aside className="notice" aria-label="Analysis diagnostics">{result.partial && <strong>Partial analysis. </strong>}{result.diagnostics?.length ? `${result.diagnostics.length} diagnostic${result.diagnostics.length === 1 ? '' : 's'} reported; some insights may be incomplete.` : 'Some insights may be incomplete.'}</aside>}
+    <ProjectPageChrome projectId={projectId} current={tr.nav.insights} />
+    <section className="page-intro"><p className="eyebrow">PROJE ANALİZLERİ</p><h1>{project.name}</h1><p>Depo ölçümleri, açıklanabilir sağlık ve risk bilgileri ile Git etkinliği.</p></section>
+    {!result ? <div className="notice" role="status">{project.latest_snapshot ? 'Analiz sonucu kullanılamıyor.' : 'Analiz sırada veya henüz bir anlık görüntü tamamlanmadı.'}</div> : <>
+      {(result.partial || (result.diagnostics?.length ?? 0) > 0) && <aside className="notice" aria-label="Analiz tanıları">{result.partial && <strong>Kısmi analiz. </strong>}{result.diagnostics?.length ? `${tr.number.format(result.diagnostics.length)} tanı bildirildi; bazı analizler eksik olabilir.` : 'Bazı analizler eksik olabilir.'}</aside>}
       <InsightsMetrics result={result} />
       <InsightsHealth result={result} />
       <InsightsRisks result={result} projectId={projectId} />

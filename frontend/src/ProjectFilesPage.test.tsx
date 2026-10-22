@@ -32,24 +32,24 @@ describe('project files page', () => {
     mockFetch({ '/projects/4': project, '/projects/4/snapshots/latest': result });
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'acme/demo' })).toBeInTheDocument();
-    const tree = screen.getByRole('navigation', { name: 'Repository files' });
+    const tree = screen.getByRole('navigation', { name: 'Depo dosyalar\u0131' });
     fireEvent.click(within(tree).getByRole('button', { name: /src\// }));
     expect(within(tree).queryByRole('button', { name: /^a\.py/ })).not.toBeInTheDocument();
     fireEvent.click(within(tree).getByRole('button', { name: /src\// }));
     fireEvent.click(within(tree).getByRole('button', { name: /^a\.py/ }));
-    const details = screen.getByRole('complementary', { name: 'File details' });
+    const details = screen.getByRole('complementary', { name: /Dosya/ });
     expect(within(details).getAllByText('src/a.py').length).toBeGreaterThan(0);
     expect(within(details).getByText('tests/test_a.py')).toBeInTheDocument();
-    expect(within(details).getByText(/Risk: high/)).toBeInTheDocument();
+    expect(within(details).getByText(/Risk: Yüksek/)).toBeInTheDocument();
     expect(within(details).getByText(/Large file: High LOC/)).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Dependency graph' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /Bağımlılık grafiği/ })).toBeInTheDocument();
   });
 
   it('shows the empty analysis and unavailable snapshot states', async () => {
     mockFetch({ '/projects/4': project, '/projects/4/snapshots/latest': { ...result, files: [], dependency_edges: [] } });
     render(<App />);
-    expect(await screen.findByText('No files in this analysis.')).toBeInTheDocument();
-    expect(screen.getByText('No files to display in the dependency graph.')).toBeInTheDocument();
+    expect(await screen.findByText('Bu analizde dosya yok.')).toBeInTheDocument();
+    expect(screen.getByText('Ba\u011f\u0131ml\u0131l\u0131k grafi\u011finde g\u00f6sterilecek dosya yok.')).toBeInTheDocument();
   });
 
   it('shows API errors with an alert', async () => {

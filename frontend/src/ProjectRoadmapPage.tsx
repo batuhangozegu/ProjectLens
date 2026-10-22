@@ -3,9 +3,10 @@ import { api, type ProjectSummary, type RoadmapProgress, type TaskAssessment, ty
 import { RoadmapProgressSummary } from './RoadmapProgressSummary';
 import { TaskTrackingCard } from './TaskTrackingCard';
 import { ProjectPageChrome } from './PageChrome';
+import { tr } from './i18n';
 
 const statusOrder: TaskStatus[] = ['IN_PROGRESS', 'TODO', 'BLOCKED', 'DONE'];
-const statusLabels: Record<TaskStatus, string> = { TODO: 'To do', IN_PROGRESS: 'In progress', DONE: 'Done', BLOCKED: 'Blocked' };
+const statusLabels: Record<TaskStatus, string> = tr.status;
 
 async function loadTasks(projectId: number) {
   const items: TaskResponse[] = [];
@@ -36,7 +37,7 @@ export function ProjectRoadmapPage({ projectId }: { projectId: number }) {
     setProject(current); setTasks(taskResult.items); setProgress(progressResult);
     const results = await Promise.all(taskResult.items.map(async (task) => {
       try { return [task.id, await api.get<TaskAssessment>(`/projects/${projectId}/tasks/${task.id}/assessment`)] as const; }
-      catch (e) { return [task.id, e instanceof Error ? e.message : 'Could not load assessment.'] as const; }
+      catch (e) { return [task.id, e instanceof Error ? e.message : 'Değerlendirme yüklenemedi.'] as const; }
     }));
     if (!aliveCheck()) return;
     const nextAssessments: Record<number, TaskAssessment> = {}, nextErrors: Record<number, string> = {};
@@ -46,7 +47,7 @@ export function ProjectRoadmapPage({ projectId }: { projectId: number }) {
 
   useEffect(() => {
     let alive = true;
-    void load(() => alive).catch((e) => { if (alive) setError(e instanceof Error ? e.message : 'Could not load roadmap.'); }).finally(() => { if (alive) setLoading(false); });
+    void load(() => alive).catch((e) => { if (alive) setError(e instanceof Error ? e.message : 'Yol haritası yüklenemedi.'); }).finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [load]);
 
@@ -63,15 +64,15 @@ export function ProjectRoadmapPage({ projectId }: { projectId: number }) {
     } catch { /* The status is saved; the next page load refreshes derived data. */ }
   }
 
-  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Roadmap" /><h1>Roadmap</h1><p role="status">Loading roadmap…</p></main>;
-  if (error || !project || !progress) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Roadmap" /><h1>Roadmap</h1><p role="alert" className="error">{error || 'Roadmap unavailable.'}</p><button className="secondary" onClick={() => location.reload()}>Try again</button></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.roadmap} /><h1>Yol Haritası</h1><p role="status">Yol haritası yükleniyor…</p></main>;
+  if (error || !project || !progress) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.roadmap} /><h1>Yol Haritası</h1><p role="alert" className="error">{error || 'Yol haritası kullanılamıyor.'}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
   const grouped = Object.fromEntries(statusOrder.map((status) => [status, tasks.filter((task) => task.status === status)])) as Record<TaskStatus, TaskResponse[]>;
   return <main id="main-content" tabIndex={-1} className="shell">
-    <ProjectPageChrome projectId={projectId} current="Roadmap" />
-    <section className="page-intro"><p className="eyebrow">ROADMAP AND CODE-AWARE TRACKING</p><h1>{project.name}</h1><p>Manual task status and analysis-based evidence are shown separately. Code evidence never changes the manual status.</p></section>
+    <ProjectPageChrome projectId={projectId} current={tr.nav.roadmap} />
+    <section className="page-intro"><p className="eyebrow">YOL HARİTASI VE KOD DESTEKLİ TAKİP</p><h1>{project.name}</h1><p>Görev durumu ve analiz kanıtları ayrı gösterilir. Kod kanıtları görev durumunu değiştirmez.</p></section>
     <RoadmapProgressSummary progress={progress} />
-    {tasks.length === 0 ? <section className="empty roadmap-empty"><h2>No roadmap tasks</h2><p>Send the contents of the repository’s TODO.md checklist to the roadmap import API. Importing is repeatable and preserves manual task edits; tasks can also be created through the tasks API.</p><code>POST /api/v1/projects/{projectId}/roadmap/import</code><pre><code>{'{ "markdown": "- [ ] Example task" }'}</code></pre></section> : <section aria-label="Roadmap tasks" className="roadmap-groups">
-      {statusOrder.map((status) => <section key={status} aria-labelledby={`group-${status}`}><h2 id={`group-${status}`}>{statusLabels[status]} <span>({grouped[status].length})</span></h2>{grouped[status].length === 0 ? <p className="muted">No tasks in this status.</p> : grouped[status].map((task) => <TaskTrackingCard key={task.id} task={task} assessment={assessments[task.id]} assessmentError={assessmentErrors[task.id]} onStatusChange={changeStatus} />)}</section>)}
+    {tasks.length === 0 ? <section className="empty roadmap-empty"><h2>Yol haritasında görev yok</h2><p>Depodaki TODO.md kontrol listesini yol haritası aktarım API'sine gönderin. Aktarım tekrarlanabilir ve elle yapılan görev düzenlemelerini korur; görevler görevler API'siyle de oluşturulabilir.</p><code>POST /api/v1/projects/{projectId}/roadmap/import</code><pre><code>{'{ "markdown": "- [ ] Örnek görev" }'}</code></pre></section> : <section aria-label="Yol haritası görevleri" className="roadmap-groups">
+      {statusOrder.map((status) => <section key={status} aria-labelledby={`group-${status}`}><h2 id={`group-${status}`}>{statusLabels[status]} <span>({tr.number.format(grouped[status].length)})</span></h2>{grouped[status].length === 0 ? <p className="muted">Bu durumda görev yok.</p> : grouped[status].map((task) => <TaskTrackingCard key={task.id} task={task} assessment={assessments[task.id]} assessmentError={assessmentErrors[task.id]} onStatusChange={changeStatus} />)}</section>)}
     </section>}
   </main>;
 }

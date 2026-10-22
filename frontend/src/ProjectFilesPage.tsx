@@ -4,6 +4,7 @@ import { FileTree } from './FileTree';
 import { DependencyGraph } from './DependencyGraph';
 import { FileDetails } from './FileDetails';
 import { ProjectPageChrome } from './PageChrome';
+import { tr } from './i18n';
 
 export function ProjectFilesPage({ projectId }: { projectId: number }) {
   const [project, setProject] = useState<ProjectSummary | null>(null);
@@ -19,18 +20,18 @@ export function ProjectFilesPage({ projectId }: { projectId: number }) {
         if (!alive) return;
         setProject(current);
         if (current.latest_snapshot) setResult(await api.get<AnalysisResult>(`/projects/${projectId}/snapshots/latest`));
-      } catch (e) { if (alive) setError(e instanceof Error ? e.message : 'Could not load project files.'); }
+      } catch (e) { if (alive) setError(e instanceof Error ? e.message : 'Proje dosyaları yüklenemedi.'); }
       finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; };
   }, [projectId]);
-  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Files" /><h1>Files and dependencies</h1><p role="status">Loading files and dependencies…</p></main>;
-  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current="Files" /><h1>Files and dependencies</h1><p role="alert" className="error">{error || 'Project unavailable.'}</p><button className="secondary" onClick={() => location.reload()}>Try again</button></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.files} /><h1>Dosyalar ve bağımlılıklar</h1><p role="status">Dosyalar ve bağımlılıklar yükleniyor…</p></main>;
+  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.files} /><h1>Dosyalar ve bağımlılıklar</h1><p role="alert" className="error">{error || 'Proje kullanılamıyor.'}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
   return <main id="main-content" tabIndex={-1} className="shell">
-    <ProjectPageChrome projectId={projectId} current="Files" />
-    <section className="page-intro"><p className="eyebrow">FILES AND DEPENDENCIES</p><h1>{project.name}</h1><p>Browse repository files and select a file to inspect its dependencies and analysis details.</p></section>
-    {!result ? <div className="notice" role="status">{project.latest_snapshot ? 'Analysis result is not available.' : 'Analysis is queued or no snapshot has completed yet.'}</div> : <>
-      {result.partial && <aside className="notice">This is a partial analysis. Some file details may be incomplete.</aside>}
+    <ProjectPageChrome projectId={projectId} current={tr.nav.files} />
+    <section className="page-intro"><p className="eyebrow">DOSYALAR VE BAĞIMLILIKLAR</p><h1>{project.name}</h1><p>Depo dosyalarına göz atın; bağımlılıklarını ve analiz ayrıntılarını görmek için bir dosya seçin.</p></section>
+    {!result ? <div className="notice" role="status">{project.latest_snapshot ? 'Analiz sonucu kullanılamıyor.' : 'Analiz sırada veya henüz bir anlık görüntü tamamlanmadı.'}</div> : <>
+      {result.partial && <aside className="notice">Bu kısmi bir analizdir. Bazı dosya ayrıntıları eksik olabilir.</aside>}
       <div className="files-layout">
         <FileTree files={result.files ?? []} selectedPath={selectedPath} onSelect={setSelectedPath} />
         <div className="files-main"><DependencyGraph result={result} selectedPath={selectedPath} onSelect={setSelectedPath} /><FileDetails file={result.files.find((file) => file.path === selectedPath)} result={result} /></div>

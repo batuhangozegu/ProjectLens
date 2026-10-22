@@ -27,25 +27,25 @@ describe('project roadmap page', () => {
   it('shows status groups, progress breakdowns and code-aware assessment', async () => {
     installFetch(); render(<App />);
     expect(await screen.findByRole('heading', { name: 'acme/demo' })).toBeInTheDocument();
-    expect(screen.getByText('0% complete')).toBeInTheDocument();
+    expect(screen.getByText('%0 tamamlandı')).toBeInTheDocument();
     expect(screen.getByText('Step 7')).toBeInTheDocument();
     expect(screen.getAllByText('API')).toHaveLength(2);
-    expect(screen.getByRole('heading', { name: 'In progress (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Devam ediyor (1)' })).toBeInTheDocument();
     expect(await screen.findByText('One criterion met and one unmet.')).toBeInTheDocument();
-    expect(screen.getByText('50%')).toBeInTheDocument();
+    expect(screen.getByText('%50')).toBeInTheDocument();
     expect(screen.getByText('src/roadmap.tsx')).toBeInTheDocument();
   });
 
   it('explains how to populate an empty roadmap', async () => {
     installFetch({ empty: true }); render(<App />);
-    expect(await screen.findByRole('heading', { name: 'No roadmap tasks' })).toBeInTheDocument();
-    expect(screen.getByText(/Send the contents of the repository’s TODO.md checklist/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Yol haritas\u0131nda g\u00f6rev yok' })).toBeInTheDocument();
+    expect(screen.getByText(/Depodaki TODO.md kontrol listesini/)).toBeInTheDocument();
     expect(screen.getByText('POST /api/v1/projects/4/roadmap/import')).toBeInTheDocument();
   });
 
   it('shows failed manual status updates inline', async () => {
     installFetch({ failMutation: true }); render(<App />);
-    const select = await screen.findByLabelText('Manual status');
+    const select = await screen.findByLabelText('Görev durumu');
     fireEvent.change(select, { target: { value: 'DONE' } });
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Task status cannot transition.'));
   });

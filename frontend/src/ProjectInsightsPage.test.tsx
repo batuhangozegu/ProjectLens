@@ -34,10 +34,10 @@ describe('project insights page', () => {
     mockFetch({ '/projects/4': project, '/projects/4/snapshots/latest': result });
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'acme/demo' })).toBeInTheDocument();
-    const metrics = screen.getByRole('region', { name: 'Metrics' });
-    expect(within(metrics).getByText('Physical LOC')).toBeInTheDocument();
+    const metrics = screen.getByRole('region', { name: 'Ölçümler' });
+    expect(within(metrics).getByText('Fiziksel satır sayısı')).toBeInTheDocument();
     expect(within(metrics).getByText('FastAPI (python)')).toBeInTheDocument();
-    expect(within(metrics).getByText(/not test coverage/i)).toBeInTheDocument();
+    expect(within(metrics).getByText(/test kapsamı değildir/)).toBeInTheDocument();
     expect(screen.getByText('90 / 100')).toBeInTheDocument();
     expect(screen.getByText('0 of 1 files are in cycles.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'src/app.py' })[0]).toHaveAttribute('href', '#/projects/4/files');
@@ -48,19 +48,19 @@ describe('project insights page', () => {
   it('explains unavailable history and missing optional metric sections', async () => {
     mockFetch({ '/projects/4': project, '/projects/4/snapshots/latest': { ...result, metrics: {} } });
     render(<App />);
-    expect(await screen.findByText(/Git activity is not available/)).toBeInTheDocument();
-    expect(screen.getByText('Health score is not available in this snapshot.')).toBeInTheDocument();
-    expect(screen.getByText('Risk ranking is not available in this snapshot.')).toBeInTheDocument();
-    expect(screen.getByText('Findings are not available in this snapshot.')).toBeInTheDocument();
+    expect(await screen.findByText(/Bu anlık görüntüde Git etkinliği yok/)).toBeInTheDocument();
+    expect(screen.getByText('Bu anlık görüntüde sağlık puanı yok.')).toBeInTheDocument();
+    expect(screen.getByText('Bu anlık görüntüde risk sıralaması yok.')).toBeInTheDocument();
+    expect(screen.getByText('Bu anlık görüntüde bulgu yok.')).toBeInTheDocument();
   });
 
   it('shows loading, no-snapshot and API error states', async () => {
     let resolve!: (value: Response) => void;
     vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>((r) => { resolve = r; })));
     render(<App />);
-    expect(screen.getByRole('status')).toHaveTextContent('Loading project insights');
+    expect(screen.getByRole('status')).toHaveTextContent('Proje analizleri yükleniyor');
     resolve(new Response(JSON.stringify({ ...project, latest_snapshot: null }), { status: 200 }));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Analysis is queued or no snapshot has completed yet.'));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Analiz sırada veya henüz bir anlık görüntü tamamlanmadı.'));
     cleanup();
     mockFetch({}); render(<App />);
     expect(await screen.findByRole('alert')).toHaveTextContent('Missing route');

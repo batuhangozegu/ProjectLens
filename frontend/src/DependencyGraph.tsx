@@ -46,11 +46,11 @@ export function DependencyGraph({ result, selectedPath, onSelect }: { result: An
   }, [visibleFiles, result.dependency_edges, result.cycles, selectedPath]);
   const omitted = connectedFiles.length - visibleFiles.length;
   const isolated = result.files.length - connectedFiles.length;
-  return <section className="graph-section" aria-label="Dependency graph">
-    <p className="graph-key">The repository file tree provides a keyboard accessible alternative for selecting files.</p>
-    {omitted > 0 && <p className="notice graph-notice" role="status">Showing {visibleFiles.length} of {connectedFiles.length} connected files in the graph. {omitted} files are omitted; use the file tree to select any file.</p>}
-    {isolated > 0 && visibleFiles.length > 0 && <p className="graph-key">{isolated} files have no local dependencies and appear only in the file tree.</p>}
-    {visibleFiles.length ?<div className="graph-canvas"><ReactFlow nodes={nodes} edges={edges} minZoom={0.1} fitView fitViewOptions={{ padding: .2 }} onInit={(flow) => { setTimeout(() => void flow.fitView({ padding: .2 }), 50); }} nodesDraggable={false} nodesConnectable={false} onNodeClick={(_, node) => onSelect(node.id)} aria-label="File dependency graph"><Background color="#cbd5e1" gap={24} /><Controls /></ReactFlow></div> : <p className="empty">{result.files.length ? 'No local dependencies were found between analyzed files.' : 'No files to display in the dependency graph.'}</p>}
-    <p className="graph-key"><span className="cycle-swatch" aria-hidden="true" /> Highlighted nodes belong to a reported cycle.</p>
+  return <section className="graph-section" aria-label="Bağımlılık grafiği">
+    <p className="graph-key">Dosya seçmek için klavyeyle kullanılabilen depo dosya ağacını da kullanabilirsiniz.</p>
+    {omitted > 0 && <p className="notice graph-notice" role="status">Grafikteki {connectedFiles.length} bağlantılı dosyanın {visibleFiles.length} tanesi gösteriliyor. {omitted} dosya gösterilmedi; tüm dosyaları seçmek için dosya ağacını kullanın.</p>}
+    {isolated > 0 && visibleFiles.length > 0 && <p className="graph-key">{isolated} dosyanın yerel bağımlılığı yok; yalnızca dosya ağacında gösteriliyor.</p>}
+    {visibleFiles.length ?<div className="graph-canvas"><ReactFlow nodes={nodes} edges={edges} minZoom={0.1} fitView fitViewOptions={{ padding: .2 }} onInit={(flow) => { setTimeout(() => void flow.fitView({ padding: .2 }), 50); }} nodesDraggable={false} nodesConnectable={false} onNodeClick={(_, node) => onSelect(node.id)} aria-label="Dosya bağımlılık grafiği"><Background color="#cbd5e1" gap={24} /><Controls /></ReactFlow></div> : <p className="empty">{result.files.length ? 'Analiz edilen dosyalar arasında yerel bağımlılık bulunamadı.' : 'Bağımlılık grafiğinde gösterilecek dosya yok.'}</p>}
+    <p className="graph-key"><span className="cycle-swatch" aria-hidden="true" /> Vurgulanan düğümler bildirilen bir döngüye aittir.</p>
   </section>;
 }
