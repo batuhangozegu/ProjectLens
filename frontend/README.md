@@ -23,3 +23,15 @@ Start the API (see the repository README), then run `npm run dev` and open the p
    - **AI**: optional. Nothing is sent until you request an explanation, and results are advisory. It requires an AI provider to be configured on the server.
 
 Navigation uses URL hashes (`#/projects/1/files`), so the app works from any static file server. Set `VITE_API_BASE` at build time if the API is not served under `/api/v1`.
+
+## Screenshots
+
+Captured from a real analysis of a public repository (dark theme follows the system preference).
+
+| Files and dependencies | Insights |
+| --- | --- |
+| ![Files](../docs/screenshots/projects-1-files.png) | ![Insights](../docs/screenshots/projects-1-insights.png) |
+| **Roadmap** | **AI (optional)** |
+| ![Roadmap](../docs/screenshots/projects-1-roadmap.png) | ![AI](../docs/screenshots/projects-1-ai.png) |
+
+Project list and overview: [list](../docs/screenshots/projects.png), [overview](../docs/screenshots/projects-1.png).

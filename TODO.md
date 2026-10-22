@@ -222,7 +222,7 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 - [x] Roadmap ve code-aware tracking görünümünü ekle.
 - [x] AI insights görünümünü ilgili backend hazırsa ekle.
 - [x] Loading/error/empty durumları, erişilebilirlik ve frontend testlerini tamamla.
-- [ ] Screenshot ve kullanıcı kurulum belgelerini ekle; adım adım commit at.
+- [x] Screenshot ve kullanıcı kurulum belgelerini ekle; adım adım commit at.
 
 ## Public release hazırlığı
 
