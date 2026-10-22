@@ -81,10 +81,49 @@ input { width: 100%; min-width: 0; padding: 12px; border: 1px solid #bdc9d9; bor
 .file-details li { overflow-wrap: anywhere; }
 .file-details section { border-top: 1px solid #e4e9f1; padding-top: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.roadmap-summary progress { width: 100%; height: 14px; accent-color: #2859bd; }
+.roadmap-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
+.roadmap-counts div { padding: 12px; border-radius: 9px; background: #f1f4fa; }
+.roadmap-counts dt { color: #58677d; font-size: .82rem; }
+.roadmap-counts dd { margin: 4px 0 0; font-size: 1.25rem; font-weight: 750; }
+.roadmap-breakdowns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.roadmap-breakdown h3 { font-size: 1rem; }
+.roadmap-breakdown ul { padding: 0; list-style: none; }
+.roadmap-breakdown li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #e4e9f1; }
+.roadmap-formula { margin-top: 20px; }
+.roadmap-groups > section { margin: 26px 0; }
+.roadmap-groups > section > h2 { font-size: 1.2rem; }
+.roadmap-groups > section > h2 span { color: #64748a; font-size: .95rem; font-weight: 500; }
+.task-card { margin: 12px 0; padding: 18px; border: 1px solid #dce3ed; border-radius: 12px; background: #fff; }
+.task-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.task-heading h3 { margin: 0; overflow-wrap: anywhere; }
+.task-heading p { color: #58677d; line-height: 1.5; }
+.priority { flex: none; padding: 5px 9px; border-radius: 999px; background: #edf1f8; font-size: .78rem; font-weight: 750; }
+.priority-critical, .priority-high { color: #8d2727; background: #ffeded; }
+.task-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0; border-top: 1px solid #e4e9f1; }
+.task-controls p { flex: 1 1 100%; margin: 0; color: #58677d; }
+.task-controls label { margin: 0; }
+.task-controls select { padding: 8px 10px; border: 1px solid #bdc9d9; border-radius: 8px; color: inherit; background: #fff; font: inherit; }
+.assessment { margin-top: 10px; padding-top: 12px; border-top: 1px solid #e4e9f1; }
+.assessment summary { cursor: pointer; font-weight: 750; }
+.assessment-details { line-height: 1.5; }
+.assessment-details h4 { margin: 18px 0 6px; }
+.assessment-details ul { padding-left: 22px; }
+.assessment-meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.assessment-meta div { padding: 10px; border-radius: 8px; background: #f1f4fa; }
+.assessment-meta dt { color: #58677d; font-size: .82rem; }
+.assessment-meta dd { margin: 4px 0 0; font-weight: 700; text-transform: capitalize; overflow-wrap: anywhere; }
+.criteria-list li { margin: 12px 0; }
+.criteria-list strong, .criteria-list span, .criteria-list small { display: block; }
+.criteria-list small { color: #58677d; overflow-wrap: anywhere; }
+.task-error { flex-basis: 100%; margin: 5px 0; }
+.roadmap-empty h2 { margin-top: 0; }
+.roadmap-empty code { display: inline-block; padding: 8px; border-radius: 6px; background: #f1f4fa; overflow-wrap: anywhere; }
 @media (max-width: 760px) { .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .files-layout { grid-template-columns: minmax(180px, 240px) minmax(0, 1fr); } }
 @media (max-width: 680px) { .files-layout { grid-template-columns: 1fr; } .graph-canvas { min-height: 300px; } }
 @media (max-width: 520px) { .shell { padding: 16px; } .form-row, .project-card { align-items: stretch; flex-direction: column; } .project-meta { text-align: left; } .metric-grid { grid-template-columns: 1fr 1fr; gap: 8px; } .metric { padding: 13px; } }
+@media (max-width: 600px) { .roadmap-breakdowns { grid-template-columns: 1fr; } .assessment-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); } .roadmap-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .roadmap-breakdown li { flex-direction: column; gap: 3px; } }
 @media (prefers-color-scheme: dark) {
   :root { color: #e8edf5; background: #101827; }
   a { color: #a8beff; }
@@ -98,6 +137,15 @@ input { width: 100%; min-width: 0; padding: 12px; border: 1px solid #bdc9d9; bor
   .tree-folder:hover, .tree-file:hover, .tree-file[aria-current="true"] { background: #293a58; }
   .tree-file small, .file-details dt, .graph-key, .file-tree h2 span { color: #aeb9ca; }
   .file-details section { border-color: #2a3950; }
+  .task-card { background: #172338; border-color: #2a3950; }
+  .task-heading p, .task-controls p, .criteria-list small { color: #aeb9ca; }
+  .task-controls, .assessment { border-color: #2a3950; }
+  .task-controls select { background: #111c2d; border-color: #3b4a61; color: #e8edf5; }
+  .roadmap-counts div, .assessment-meta div, .roadmap-empty code { background: #293a58; }
+  .roadmap-counts dt, .assessment-meta dt { color: #aeb9ca; }
+  .roadmap-breakdown li { border-color: #2a3950; }
+  .priority { color: #e8edf5; background: #293a58; }
+  .priority-critical, .priority-high { color: #ffcaca; background: #512d36; }
   .panel caption, .health-score span, .muted { color: #aeb9ca; }
   .panel th, .panel td { border-color: #2a3950; }
   input { background: #111c2d; border-color: #3b4a61; color: #e8edf5; }
