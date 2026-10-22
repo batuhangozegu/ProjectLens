@@ -8,7 +8,8 @@ export function useRoute() {
     return () => removeEventListener('hashchange', update);
   }, []);
   const match = path.match(/^\/projects\/(\d+)$/);
-  return { path, projectId: match ? Number(match[1]) : null };
+  const filesMatch = path.match(/^\/projects\/(\d+)\/files\/?$/);
+  return { path, projectId: match ? Number(match[1]) : filesMatch ? Number(filesMatch[1]) : null, files: Boolean(filesMatch) };
 }
 
 export function navigate(path: string) { location.hash = path; }

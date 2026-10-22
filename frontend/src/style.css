@@ -41,8 +41,36 @@ input { width: 100%; min-width: 0; padding: 12px; border: 1px solid #bdc9d9; bor
 .metric p { margin: 12px 0 4px; font-size: 1.35rem; font-weight: 750; overflow-wrap: anywhere; }
 .metric small { display: block; }
 .panel li { margin: 8px 0; overflow-wrap: anywhere; }
+.files-link { display: inline-block; padding: 10px 14px; border-radius: 9px; background: #e8eef9; font-weight: 700; text-decoration: none; }
+.files-layout { display: grid; grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.file-tree, .file-details { min-width: 0; padding: 18px; border: 1px solid #dce3ed; border-radius: 12px; background: #fff; }
+.file-tree h2, .file-details h2 { margin: 0 0 12px; font-size: 1.1rem; }
+.file-tree h2 span { color: #64748a; font-weight: 500; }
+.file-tree ul { padding-left: 16px; list-style: none; }
+.file-tree > ul { padding-left: 0; }
+.file-tree li { margin: 3px 0; }
+.tree-folder, .tree-file { display: block; width: 100%; padding: 7px 8px; text-align: left; color: inherit; background: transparent; font-weight: 600; overflow-wrap: anywhere; }
+.tree-folder:hover, .tree-file:hover { background: #eef3fc; }
+.tree-file[aria-current="true"] { background: #e7edff; box-shadow: inset 3px 0 #4568c2; }
+.tree-file small { display: block; padding-left: 15px; color: #64748a; font-weight: 400; }
+.files-main { min-width: 0; display: grid; gap: 14px; }
+.graph-section { min-width: 0; }
+.graph-canvas { height: min(62vh, 620px); min-height: 340px; border: 1px solid #dce3ed; border-radius: 12px; background: #f8faff; overflow: hidden; }
+.graph-notice { margin: 0 0 10px; }
+.graph-key { color: #58677d; font-size: .9rem; }
+.cycle-swatch { display: inline-block; width: 13px; height: 13px; margin-right: 6px; border: 2px solid #bd5429; border-radius: 3px; vertical-align: -2px; background: #fff0e8; }
+.file-details { line-height: 1.5; }
+.file-details h3 { font-size: 1rem; }
+.detail-path { overflow-wrap: anywhere; }
+.file-details dl { display: grid; grid-template-columns: minmax(130px, .65fr) minmax(0, 1fr); gap: 6px 12px; }
+.file-details dt { color: #58677d; }
+.file-details dd { margin: 0; overflow-wrap: anywhere; }
+.file-details li { overflow-wrap: anywhere; }
+.file-details section { border-top: 1px solid #e4e9f1; padding-top: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (max-width: 760px) { .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .files-layout { grid-template-columns: minmax(180px, 240px) minmax(0, 1fr); } }
+@media (max-width: 680px) { .files-layout { grid-template-columns: 1fr; } .graph-canvas { min-height: 300px; } }
 @media (max-width: 520px) { .shell { padding: 16px; } .form-row, .project-card { align-items: stretch; flex-direction: column; } .project-meta { text-align: left; } .metric-grid { grid-template-columns: 1fr 1fr; gap: 8px; } .metric { padding: 13px; } }
 @media (prefers-color-scheme: dark) {
   :root { color: #e8edf5; background: #101827; }
@@ -50,6 +78,13 @@ input { width: 100%; min-width: 0; padding: 12px; border: 1px solid #bdc9d9; bor
   .page-intro p:not(.eyebrow), .project-card small, .project-meta, .metric small, .metric h2 { color: #aeb9ca; }
   .eyebrow { color: #91aaff; }
   .panel, .project-card, .metric, .empty, .error-state { background: #172338; border-color: #2a3950; }
+  .file-tree, .file-details { background: #172338; border-color: #2a3950; }
+  .graph-canvas { background: #172338; border-color: #2a3950; }
+  .files-link { color: #dbe5ff; background: #293a58; }
+  .tree-folder, .tree-file { color: #e8edf5; }
+  .tree-folder:hover, .tree-file:hover, .tree-file[aria-current="true"] { background: #293a58; }
+  .tree-file small, .file-details dt, .graph-key, .file-tree h2 span { color: #aeb9ca; }
+  .file-details section { border-color: #2a3950; }
   input { background: #111c2d; border-color: #3b4a61; color: #e8edf5; }
   .secondary { color: #dae4ff; background: #293a58; }
   .secondary:hover { background: #344b70; }
