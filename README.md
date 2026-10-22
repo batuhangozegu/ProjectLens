@@ -220,3 +220,13 @@ npm run dev
 ```
 
 The dev server proxies `/api` to `http://localhost:8000`. See the [frontend README](frontend/README.md#using-the-app) for what each screen shows.
+
+## Supported languages
+
+| Level | Languages |
+| --- | --- |
+| Parsed (imports, dependency graph, cycles, symbols, size findings) | Python, Dart (Flutter) |
+| Framework detection from manifests | Python (`pyproject.toml`, `requirements*.txt`), Dart (`pubspec.yaml`) |
+| Counted only (files, physical LOC, language label, tree view) | everything else, e.g. JavaScript/TypeScript, Java, Go, config and docs |
+
+Other languages still appear in the file tree and size metrics, but have no dependency edges, health imports or code findings. Dart parsing is a declaration-oriented lexer, not a full grammar (see [architecture](docs/ARCHITECTURE.md)).

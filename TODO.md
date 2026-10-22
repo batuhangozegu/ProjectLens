@@ -226,9 +226,8 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 
 ## Public release hazırlığı
 
-- [ ] Lisansı seç ve LICENSE ekle.
-- [ ] CONTRIBUTING.md, CODE_OF_CONDUCT.md ve güvenlik bildirim yönergesi ekle.
-- [ ] README setup, Docker, architecture, roadmap ve katkı bağlantılarını güncelle.
+Kapsam dışı: lisans, katkı ve güvenlik dosyaları eklenmeyecek (kişisel proje).
+
 
 ## Daha sonraki backlog
 
