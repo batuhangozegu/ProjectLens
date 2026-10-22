@@ -4,6 +4,7 @@ import { useRoute } from './router';
 import { ProjectFilesPage } from './ProjectFilesPage';
 import { ProjectInsightsPage } from './ProjectInsightsPage';
 import { ProjectRoadmapPage } from './ProjectRoadmapPage';
+import { ProjectAIInsightsPage } from './ProjectAIInsightsPage';
 
 const unavailable = 'not available';
 function record(value: unknown): Record<string, any> { return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {}; }
@@ -119,7 +120,7 @@ export function ProjectOverviewPage({ projectId }: { projectId: number }) {
     <header className="site-header"><a className="brand" href="#/"><span className="mark" aria-hidden="true">PL</span>ProjectLens</a></header>
     <nav aria-label="Breadcrumb"><a href="#/">← All projects</a></nav>
     <section className="page-intro"><p className="eyebrow">PROJECT OVERVIEW</p><h1>{project.name}</h1><p>{project.repository_url || unavailable} · default branch: {show(project.default_branch)}</p></section>
-    <p className="page-links"><a className="files-link" href={`#/projects/${projectId}/files`}>Explore files and dependencies →</a><a className="files-link" href={`#/projects/${projectId}/insights`}>Metrics, health, risks and activity →</a><a className="files-link" href={`#/projects/${projectId}/roadmap`}>Roadmap and code-aware tracking →</a></p>
+    <p className="page-links"><a className="files-link" href={`#/projects/${projectId}/files`}>Explore files and dependencies →</a><a className="files-link" href={`#/projects/${projectId}/insights`}>Metrics, health, risks and activity →</a><a className="files-link" href={`#/projects/${projectId}/roadmap`}>Roadmap and code-aware tracking →</a><a className="files-link" href={`#/projects/${projectId}/ai`}>Optional AI explanations →</a></p>
     {!result ? <div className="notice" role="status">{project.latest_snapshot ? 'Analysis result is not available.' : 'Analysis is queued or no snapshot has completed yet.'}</div> : <>
       {(result.partial || (result.diagnostics?.length ?? 0) > 0) && <aside className="notice" aria-label="Analysis diagnostics">{result.partial && <strong>Partial analysis</strong>} {result.diagnostics?.length ? `${result.diagnostics.length} diagnostic${result.diagnostics.length === 1 ? '' : 's'} reported. Some results may be incomplete.` : ''}</aside>}
       <section className="metric-grid" aria-label="Project metrics">
@@ -137,4 +138,4 @@ export function ProjectOverviewPage({ projectId }: { projectId: number }) {
 
 function Metric({ label, value, detail }: { label: string; value: unknown; detail?: string }) { return <article className="metric"><h2>{label}</h2><p>{show(value)}</p>{detail && <small>{detail}</small>}</article>; }
 
-export default function App() { const route = useRoute(); return route.projectId === null ? <ProjectListPage /> : route.files ? <ProjectFilesPage projectId={route.projectId} /> : route.insights ? <ProjectInsightsPage projectId={route.projectId} /> : route.roadmap ? <ProjectRoadmapPage projectId={route.projectId} /> : <ProjectOverviewPage projectId={route.projectId} />; }
+export default function App() { const route = useRoute(); return route.projectId === null ? <ProjectListPage /> : route.files ? <ProjectFilesPage projectId={route.projectId} /> : route.insights ? <ProjectInsightsPage projectId={route.projectId} /> : route.roadmap ? <ProjectRoadmapPage projectId={route.projectId} /> : route.ai ? <ProjectAIInsightsPage projectId={route.projectId} /> : <ProjectOverviewPage projectId={route.projectId} />; }

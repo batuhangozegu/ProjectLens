@@ -220,7 +220,7 @@ Her alt adım bağımsız commit'tir. Parser'lar kaynağı asla çalıştırmaz/
 - [x] File tree, dependency graph ve node detaylarını ekle.
 - [x] Metrics, health, risks ve activity ekranlarını ekle.
 - [x] Roadmap ve code-aware tracking görünümünü ekle.
-- [ ] AI insights görünümünü ilgili backend hazırsa ekle.
+- [x] AI insights görünümünü ilgili backend hazırsa ekle.
 - [ ] Loading/error/empty durumları, erişilebilirlik ve frontend testlerini tamamla.
 - [ ] Screenshot ve kullanıcı kurulum belgelerini ekle; adım adım commit at.
 
