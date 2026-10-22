@@ -208,3 +208,15 @@ Expected exclusions and skipped symlinks alone do not make the pipeline result p
 ## Project status
 
 Milestone 1 and the GitHub, persistence, and API portions of milestone 2 are implemented. The PostgreSQL test pass, Docker Compose deployment, and CI workflow are documented in step 2.4; Docker Compose has been run and verified locally. The roadmap for remaining work is in [TODO.md](TODO.md). See [architecture](docs/ARCHITECTURE.md) for analysis and API contracts.
+
+## Web interface
+
+A React/TypeScript client lives in [`frontend/`](frontend/README.md). With the API running on port 8000:
+
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+The dev server proxies `/api` to `http://localhost:8000`. See the [frontend README](frontend/README.md#using-the-app) for what each screen shows.
