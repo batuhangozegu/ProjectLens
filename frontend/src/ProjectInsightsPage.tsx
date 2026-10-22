@@ -26,10 +26,10 @@ export function ProjectInsightsPage({ projectId }: { projectId: number }) {
     return () => { alive = false; };
   }, [projectId]);
 
-  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.insights} /><h1>Proje analizleri</h1><p role="status">Proje analizleri yükleniyor…</p></main>;
-  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.insights} /><h1>Proje analizleri</h1><p role="alert" className="error">{error || 'Proje kullanılamıyor.'}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.insights} project={project} /><h1>Proje analizleri</h1><p role="status">Proje analizleri yükleniyor…</p></main>;
+  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.insights} project={project} /><h1>Proje analizleri</h1><p role="alert" className="error">{error || 'Proje kullanılamıyor.'}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
   return <main id="main-content" tabIndex={-1} className="shell">
-    <ProjectPageChrome projectId={projectId} current={tr.nav.insights} />
+    <ProjectPageChrome projectId={projectId} current={tr.nav.insights} project={project} />
     <section className="page-intro"><p className="eyebrow">PROJE ANALİZLERİ</p><h1>{project.name}</h1><p>Depo ölçümleri, açıklanabilir sağlık ve risk bilgileri ile Git etkinliği.</p></section>
     {!result ? <div className="notice" role="status">{project.latest_snapshot ? 'Analiz sonucu kullanılamıyor.' : 'Analiz sırada veya henüz bir anlık görüntü tamamlanmadı.'}</div> : <>
       {(result.partial || (result.diagnostics?.length ?? 0) > 0) && <aside className="notice" aria-label="Analiz tanıları">{result.partial && <strong>Kısmi analiz. </strong>}{result.diagnostics?.length ? `${tr.number.format(result.diagnostics.length)} tanı bildirildi; bazı analizler eksik olabilir.` : 'Bazı analizler eksik olabilir.'}</aside>}

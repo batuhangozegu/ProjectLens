@@ -51,17 +51,17 @@ export function ProjectAIInsightsPage({ projectId }: { projectId: number }) {
     finally { setRequesting(false); }
   }
 
-  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.ai} /><h1>Yapay zeka analizleri</h1><p role="status">Yapay zeka analizleri yükleniyor…</p></main>;
-  if (error && !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.ai} /><h1>Yapay zeka analizleri</h1><p role="alert" className="error">{error}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
-  if (!project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.ai} /><h1>Yapay zeka analizleri</h1><p role="alert" className="error">Proje kullanılamıyor.</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.ai} project={project} /><h1>Yapay zeka analizleri</h1><p role="status">Yapay zeka analizleri yükleniyor…</p></main>;
+  if (error && !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.ai} project={project} /><h1>Yapay zeka analizleri</h1><p role="alert" className="error">{error}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
+  if (!project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.ai} project={project} /><h1>Yapay zeka analizleri</h1><p role="alert" className="error">Proje kullanılamıyor.</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
 
   return <main id="main-content" tabIndex={-1} className="shell">
-    <ProjectPageChrome projectId={projectId} current={tr.nav.ai} />
+    <ProjectPageChrome projectId={projectId} current={tr.nav.ai} project={project} />
     <section className="page-intro"><p className="eyebrow">İSTEĞE BAĞLI YAPAY ZEKA ANALİZLERİ</p><h1>{project.name}</h1><p>Kaydedilen son analiz için yapay zeka açıklaması isteyin. İsteği göndermeden veri paylaşılmaz.</p></section>
     <section className="notice ai-data-note" aria-labelledby="ai-data-title">
       <h2 id="ai-data-title">Paylaşılan veriler</h2>
       <p>Yapay zeka isteğe bağlıdır ve devre dışı bırakılmış olabilir. Etkinse ProjectLens, kaydedilen analizden seçilmiş küçük bir bağlamı yapılandırılmış harici yapay zeka hizmetine gönderir. Bu bağlam depo dosya yollarını, dosya türlerini, bağımlılık ilişkilerini, özet ölçümleri, sağlık ve risk bulgularını ve çatı kanıtlarını içerebilir.</p>
-      <p>Bağlam varsayılan olarak 16 KB ile sınırlıdır. Kaynak kodu veya dosya içerikleri, depo adresi, kimlik bilgileri, depo kopyası ya da analizin tamamı gönderilmez. Bu uygulamada yapay zeka hizmeti henüz yapılandırılmamış; bu nedenle hizmetin kullanılamadığı bildirilebilir.</p>
+      <p>Bağlam varsayılan olarak 16 KB ile sınırlıdır. Kaynak kodu veya dosya içerikleri, depo adresi, kimlik bilgileri, depo kopyası ya da analizin tamamı gönderilmez.</p>
       <p>Depodan alınan veriler ve yapay zeka yanıtı doğrulanmamış içeriktir. Önerileri belirtilen analiz kaynaklarıyla karşılaştırın.</p>
     </section>
     {!project.latest_snapshot && <div className="notice" role="status">Henüz tamamlanmış analiz yok. Açıklama istemeden önce analiz çalıştırın.</div>}

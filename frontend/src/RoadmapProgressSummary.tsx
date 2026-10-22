@@ -1,5 +1,5 @@
 import type { RoadmapProgress } from './api/client';
-import { statusLabel, tr } from './i18n';
+import { statusLabel, tr, codeLabel, translateText } from './i18n';
 
 const statuses = ['TODO', 'IN_PROGRESS', 'DONE', 'BLOCKED'];
 
@@ -12,7 +12,7 @@ function Breakdown({ title, items }: { title: string; items: Record<string, Reco
         const total = Number(item.total ?? 0);
         const completed = Number(item.completed ?? 0);
         const percent = item.percent_complete;
-        return <li key={label}><span>{label}</span><span>{tr.number.format(completed)} / {tr.number.format(total)} tamamlandı{typeof percent === 'number' ? ` · %${tr.number.format(percent)}` : ''}</span></li>;
+        return <li key={label}><span>{codeLabel(label)}</span><span>{tr.number.format(completed)} / {tr.number.format(total)} tamamlandı{typeof percent === 'number' ? ` · %${tr.number.format(percent)}` : ''}</span></li>;
       })}
     </ul>}
   </section>;
@@ -28,6 +28,6 @@ export function RoadmapProgressSummary({ progress }: { progress: RoadmapProgress
       {progress.has_blocked && <p className="notice" role="status">Bu yol haritasında engellenen görevler var.</p>}
       <div className="roadmap-breakdowns"><Breakdown title="Bölümler" items={progress.breakdown_by_section} /><Breakdown title="Kategoriler" items={progress.breakdown_by_category} /></div>
     </>}
-    <p className="muted roadmap-formula">Tamamlanma yüzdesi, tamamlanan görevlerin tüm görevlere oranıdır. Devam eden görevler kısmi puan almaz, engellenen görevler paydada kalır. Boş bir yol haritasının yüzdesi yoktur.</p>
+    <p className="muted roadmap-formula">{progress.formula ? translateText(progress.formula) : 'Tamamlanma yüzdesi, tamamlanan görevlerin tüm görevlere oranıdır. Devam eden görevler kısmi puan almaz, engellenen görevler paydada kalır. Boş bir yol haritasının yüzdesi yoktur.'}</p>
   </section>;
 }

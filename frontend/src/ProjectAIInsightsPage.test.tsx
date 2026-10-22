@@ -35,7 +35,8 @@ describe('project AI insights page', () => {
     expect(await screen.findByText('The app has a small dependency graph.')).toBeInTheDocument();
     expect(screen.getByText('YAPAY ZEKA \u00dcRET\u0130M\u0130 \u00b7 \u00d6NER\u0130 N\u0130TEL\u0130\u011e\u0130NDE')).toBeInTheDocument();
     expect(screen.getByText(/do\u011frulanmam\u0131\u015f kabul edin/)).toBeInTheDocument();
-    expect(screen.getByText('src/app.py · file')).toBeInTheDocument();
+    expect(screen.getByText('src/app.py · Dosya')).toBeInTheDocument();
+    expect(screen.getByText('Belirtilen kaynakları doğrulayın.')).toBeInTheDocument();
     const request = fetchMock.mock.calls.find(([input]) => String(input).includes('/ai/explanations'));
     expect(JSON.parse(String(request?.[1]?.body))).toEqual({ kind: 'architecture', snapshot: 'latest' });
   });

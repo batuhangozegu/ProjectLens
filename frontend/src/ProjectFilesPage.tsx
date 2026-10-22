@@ -25,10 +25,10 @@ export function ProjectFilesPage({ projectId }: { projectId: number }) {
     })();
     return () => { alive = false; };
   }, [projectId]);
-  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.files} /><h1>Dosyalar ve bağımlılıklar</h1><p role="status">Dosyalar ve bağımlılıklar yükleniyor…</p></main>;
-  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.files} /><h1>Dosyalar ve bağımlılıklar</h1><p role="alert" className="error">{error || 'Proje kullanılamıyor.'}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.files} project={project} /><h1>Dosyalar ve bağımlılıklar</h1><p role="status">Dosyalar ve bağımlılıklar yükleniyor…</p></main>;
+  if (error || !project) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.files} project={project} /><h1>Dosyalar ve bağımlılıklar</h1><p role="alert" className="error">{error || 'Proje kullanılamıyor.'}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
   return <main id="main-content" tabIndex={-1} className="shell">
-    <ProjectPageChrome projectId={projectId} current={tr.nav.files} />
+    <ProjectPageChrome projectId={projectId} current={tr.nav.files} project={project} />
     <section className="page-intro"><p className="eyebrow">DOSYALAR VE BAĞIMLILIKLAR</p><h1>{project.name}</h1><p>Depo dosyalarına göz atın; bağımlılıklarını ve analiz ayrıntılarını görmek için bir dosya seçin.</p></section>
     {!result ? <div className="notice" role="status">{project.latest_snapshot ? 'Analiz sonucu kullanılamıyor.' : 'Analiz sırada veya henüz bir anlık görüntü tamamlanmadı.'}</div> : <>
       {result.partial && <aside className="notice">Bu kısmi bir analizdir. Bazı dosya ayrıntıları eksik olabilir.</aside>}

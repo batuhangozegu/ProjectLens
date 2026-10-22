@@ -13,7 +13,7 @@ const result = {
   dependency_edges: [{ source: 'src/a.py', target: 'src/b.py', import_line: 1, evidence_lines: [1] }, { source: 'src/b.py', target: 'src/a.py', import_line: 1, evidence_lines: [1] }],
   cycles: [['src/a.py', 'src/b.py']], external_imports: [], unresolved_imports: [], frameworks: [],
   test_matches: [{ source: 'src/a.py', tests: [{ path: 'tests/test_a.py', rule: 'name match' }] }],
-  metrics: { risk: { top_risks: [{ path: 'src/a.py', level: 'high' }] }, findings: { top_findings: [{ path: 'src/a.py', title: 'Large file', reason: 'High LOC' }] } }, diagnostics: [], partial: false,
+  metrics: { risk: { top_risks: [{ path: 'src/a.py', level: 'high', factors: [{ id: 'size', reason: '1200 physical LOC' }] }] }, findings: { top_findings: [{ path: 'src/a.py', kind: 'large_class', severity: 'warning', reason: 'Class-like declaration spans 450 lines; threshold is 400 lines.' }] } }, diagnostics: [], partial: false,
 };
 
 function mockFetch(routes: Record<string, unknown>) {
@@ -41,8 +41,12 @@ describe('project files page', () => {
     expect(within(details).getAllByText('src/a.py').length).toBeGreaterThan(0);
     expect(within(details).getByText('tests/test_a.py')).toBeInTheDocument();
     expect(within(details).getByText(/Risk: Yüksek/)).toBeInTheDocument();
-    expect(within(details).getByText(/Large file: High LOC/)).toBeInTheDocument();
+    expect(within(details).getByText('1200 fiziksel LOC')).toBeInTheDocument();
+    expect(within(details).getByText(/Büyük sınıf · Uyarı: Sınıf benzeri bildirim 450 satır uzunluğunda; eşik 400 satır./)).toBeInTheDocument();
     expect(screen.getByRole('region', { name: /Bağımlılık grafiği/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Yakınlaştır' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Uzaklaştır' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Grafiği ekrana sığdır' })).toBeInTheDocument();
   });
 
   it('shows the empty analysis and unavailable snapshot states', async () => {

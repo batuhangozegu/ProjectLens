@@ -1,9 +1,9 @@
 import type { AnalysisResult } from './api/client';
-import { tr } from './i18n';
+import { tr, translateText, languageLabel, codeLabel } from './i18n';
 
 const unavailable = tr.unavailable;
 const record = (value: unknown): Record<string, any> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
-const display = (value: unknown) => value === null || value === undefined || value === '' ? unavailable : typeof value === 'number' ? new Intl.NumberFormat('tr-TR').format(value) : String(value);
+const display = (value: unknown) => value === null || value === undefined || value === '' ? unavailable : typeof value === 'number' ? new Intl.NumberFormat('tr-TR').format(value) : translateText(value);
 
 export function InsightsMetrics({ result }: { result: AnalysisResult }) {
   const metrics = record(result.metrics);
@@ -15,11 +15,11 @@ export function InsightsMetrics({ result }: { result: AnalysisResult }) {
     ? `${tr.number.format(testMatches.sources_with_matching_test ?? 0)} / ${tr.number.format(testMatches.sources_total)} kaynak dosyayla eşleşti`
     : result.test_matches ? `${tr.number.format(result.test_matches.filter((item) => item.tests?.length).length)} kaynak dosyayla eşleşti` : unavailable;
   const rows = [
-    ['Fiziksel satır sayısı', display(physical.total), physical.unavailable_file_count ? `${tr.number.format(physical.unavailable_file_count)} dosyanın satır sayısı kullanılamıyor` : 'Erişilebilen tüm dosya sayıları dahil'],
+    ['Fiziksel satır sayısı', display(physical.total), `Boş satırlar ve yorumlar dahil LOC; karmaşıklık ölçüsü değildir.${physical.unavailable_file_count ? ` ${tr.number.format(physical.unavailable_file_count)} dosyanın satır sayısı kullanılamıyor.` : ''}`],
     ['Dosyalar', display(metrics.total_file_count ?? result.files?.length), 'Bu anlık görüntüde bulunan depo dosyaları'],
-    ['Diller', languages.size ? [...languages].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, count]) => `${name} (${tr.number.format(count)})`).join(', ') : result.files ? 'Algılanmadı' : unavailable, 'Dosya kayıtlarından sayıldı'],
-    ['Çatılar', result.frameworks?.length ? result.frameworks.map((item) => `${item.name} (${item.ecosystem})`).join(', ') : result.frameworks ? 'Algılanmadı' : unavailable, 'Bildirim dosyalarından algılandı'],
-    ['Test eşleşmeleri', tests, 'Ad/aktarim sezgiseli; test kapsamı değildir'],
+    ['Diller', languages.size ? [...languages].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, count]) => `${languageLabel(name)} (${tr.number.format(count)})`).join(', ') : result.files ? 'Algılanmadı' : unavailable, 'Dosya uzantılarından algılanır; dilin kullanım yoğunluğunu ölçmez.'],
+    ['Çatılar', result.frameworks?.length ? result.frameworks.map((item) => `${item.name} (${languageLabel(item.ecosystem)} · ${codeLabel(item.kind)})`).join(', ') : result.frameworks ? 'Algılanmadı' : unavailable, 'Bildirim dosyalarından algılanır; kodda kullanım incelenmez.'],
+    ['Test eşleşmeleri', tests, 'Ad/içe aktarım eşleşmesi; test kapsamı değildir'],
   ];
   return <section className="panel" aria-labelledby="insights-metrics-title">
     <h2 id="insights-metrics-title">Ölçümler</h2>

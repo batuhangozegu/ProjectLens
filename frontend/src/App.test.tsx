@@ -39,6 +39,18 @@ describe('project screens', () => {
     expect(screen.getByRole('link', { name: 'Projelere dön' })).toHaveAttribute('href', '#/');
   });
 
+  it('moves focus to content without changing the hash route', async () => {
+    location.hash = '#/projects/1';
+    mockFetch({ '/projects/1': project, '/projects/1/snapshots/latest': result });
+    render(<App />);
+    await screen.findByRole('heading', { name: 'acme/demo' });
+    const skip = screen.getByRole('link', { name: 'Ana içeriğe geç' });
+    skip.focus();
+    fireEvent.click(skip);
+    expect(location.hash).toBe('#/projects/1');
+    expect(screen.getByRole('main')).toHaveFocus();
+  });
+
   it.each([
     ['overview', '#/projects/1'], ['files', '#/projects/1/files'], ['insights', '#/projects/1/insights'],
     ['roadmap', '#/projects/1/roadmap'], ['AI insights', '#/projects/1/ai'],
@@ -117,13 +129,13 @@ describe('project screens', () => {
   it('shows the server conflict message inline on overview deletion', async () => {
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = new URL(String(input), 'http://localhost').pathname.replace('/api/v1', '');
-      if (path === '/projects/1' && init?.method === 'DELETE') return Response.json({ error: { code: 'analysis_active', message: 'Analysis is active.' } }, { status: 409 });
+      if (path === '/projects/1' && init?.method === 'DELETE') return Response.json({ error: { code: 'project_analysis_active', message: 'Project cannot be deleted while an analysis is queued or running.' } }, { status: 409 });
       if (path === '/projects/1/snapshots/latest') return Response.json(result);
       return Response.json(path === '/projects' ? { items: [project] } : project);
     }));
     location.hash = '#/projects/1'; render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: 'Projeyi sil' }));
     fireEvent.click(screen.getByRole('button', { name: 'Evet, projeyi sil' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Analysis is active.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Analiz sıradayken veya sürerken proje silinemez. Analizin bitmesini bekleyin.');
   });
 });

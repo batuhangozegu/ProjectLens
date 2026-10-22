@@ -5,7 +5,7 @@ import App from './App';
 const project = { id: 4, name: 'acme/demo', slug: 'acme-demo', repository_url: 'https://github.com/acme/demo', default_branch: 'main', created_at: '', updated_at: '', latest_snapshot: null };
 const progress = { formula_version: '1', total: 1, counts: { TODO: 0, IN_PROGRESS: 1, DONE: 0, BLOCKED: 0 }, completed: 0, percent_complete: 0, state: 'in_progress', has_blocked: false, remaining: 1, breakdown_by_category: { API: { total: 1, completed: 0, percent_complete: 0, counts: { TODO: 0, IN_PROGRESS: 1, DONE: 0, BLOCKED: 0 } } }, breakdown_by_section: { 'Step 7': { total: 1, completed: 0, percent_complete: 0, counts: { TODO: 0, IN_PROGRESS: 1, DONE: 0, BLOCKED: 0 } } }, formula: 'Only DONE tasks count as complete.', manual_status_only: true };
 const task = { id: 9, project_id: 4, title: 'Add roadmap UI', description: 'Show evidence', status: 'IN_PROGRESS' as const, priority: 'HIGH' as const, category: 'API', position: 1, source: 'import' as const, source_key: '7/add-roadmap', created_at: '', updated_at: '', completed_at: null };
-const assessment = { project_id: 4, task_id: 9, formula_version: '1', state: 'estimated', manual_status: 'IN_PROGRESS', estimated_percent: 50, confidence: 'medium', reasons: ['One criterion met and one unmet.'], criteria_results: [{ criterion_id: 2, kind: 'file_exists', outcome: 'met', reason: 'File is present.', evidence: ['src/roadmap.tsx'] }], unknown_criteria: [], attestations: { attested: 0, total: 0 }, context: [{ path: 'src/roadmap.tsx', exists: true, analyzed: true }], divergence: null, divergence_reason: null, snapshot: { id: 3, commit: 'abc' } };
+const assessment = { project_id: 4, task_id: 9, formula_version: '1', state: 'estimated', manual_status: 'IN_PROGRESS', estimated_percent: 50, confidence: 'medium', reasons: ['Estimate uses 1 met and 1 unmet automatic criteria; 0 unknown criteria are excluded from the percentage.'], criteria_results: [{ criterion_id: 2, kind: 'file_exists', outcome: 'met', reason: 'file is present and analyzed', evidence: ['src/roadmap.tsx'] }], unknown_criteria: [], attestations: { attested: 0, total: 0 }, context: [{ path: 'src/roadmap.tsx', exists: true, analyzed: true }], divergence: null, divergence_reason: null, snapshot: { id: 3, commit: 'abc' } };
 
 function installFetch({ empty = false, failMutation = false }: { empty?: boolean; failMutation?: boolean } = {}) {
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -31,7 +31,13 @@ describe('project roadmap page', () => {
     expect(screen.getByText('Step 7')).toBeInTheDocument();
     expect(screen.getAllByText('API')).toHaveLength(2);
     expect(screen.getByRole('heading', { name: 'Devam ediyor (1)' })).toBeInTheDocument();
-    expect(await screen.findByText('One criterion met and one unmet.')).toBeInTheDocument();
+    expect(await screen.findByText('Kanıtlara göre %50 · Orta güven')).toBeInTheDocument();
+    const details = screen.getByText('Kod destekli değerlendirme ayrıntıları').closest('details')!;
+    expect(details).not.toHaveAttribute('open');
+    fireEvent.click(screen.getByText('Kod destekli değerlendirme ayrıntıları'));
+    expect(details).toHaveAttribute('open');
+    expect(screen.getByText('Tahmin, karşılanan 1 ve karşılanmayan 1 otomatik ölçüte dayanıyor; belirsiz 0 ölçüt yüzdeye katılmadı.')).toBeInTheDocument();
+    expect(screen.getByText('Dosya varlığı · Karşılandı')).toBeInTheDocument();
     expect(screen.getByText('%50')).toBeInTheDocument();
     expect(screen.getByText('src/roadmap.tsx')).toBeInTheDocument();
   });
@@ -39,14 +45,22 @@ describe('project roadmap page', () => {
   it('explains how to populate an empty roadmap', async () => {
     installFetch({ empty: true }); render(<App />);
     expect(await screen.findByRole('heading', { name: 'Yol haritas\u0131nda g\u00f6rev yok' })).toBeInTheDocument();
-    expect(screen.getByText(/Depodaki TODO.md kontrol listesini/)).toBeInTheDocument();
-    expect(screen.getByText('POST /api/v1/projects/4/roadmap/import')).toBeInTheDocument();
+    expect(screen.getByText(/Depodaki TODO.md kontrol listesinden/)).toBeInTheDocument();
+    expect(screen.getByText('Bu ekranda görev oluşturma veya aktarma henüz desteklenmiyor.')).toBeInTheDocument();
   });
 
   it('shows failed manual status updates inline', async () => {
     installFetch({ failMutation: true }); render(<App />);
     const select = await screen.findByLabelText('Görev durumu');
     fireEvent.change(select, { target: { value: 'DONE' } });
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Task status cannot transition.'));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Görev bu duruma geçirilemiyor. Mevcut durumunu kontrol edin.'));
+  });
+
+  it('moves a task to the new status group after saving', async () => {
+    installFetch(); render(<App />);
+    fireEvent.change(await screen.findByLabelText('Görev durumu'), { target: { value: 'DONE' } });
+    expect(await screen.findByRole('heading', { name: 'Tamamlandı (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Devam ediyor (0)' })).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledWith('/api/v1/projects/4/tasks/9', expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ status: 'DONE' }) }));
   });
 });

@@ -1,9 +1,11 @@
+import { apiErrorMessage } from '../i18n';
+
 const API_BASE = (import.meta.env.VITE_API_BASE ?? '/api/v1').replace(/\/$/, '');
 
 export interface ApiErrorEnvelope { error: { code: string; message: string } }
 export class ApiError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string) {
-    super(message);
+    super(apiErrorMessage(code, message));
     this.name = 'ApiError';
   }
 }
@@ -12,12 +14,12 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path.startsWith('/') ? path : `/${path}`}`, {
     ...init,
     headers: { ...(init?.body ? { 'Content-Type': 'application/json' } : {}), ...init?.headers },
-  });
+  }).catch(() => { throw new ApiError(0, 'network_error', 'Sunucuya bağlanılamadı. Bağlantınızı kontrol edip yeniden deneyin.'); });
   if (response.status === 204) return undefined as T;
   const body: unknown = await response.json().catch(() => undefined);
   if (!response.ok) {
     const envelope = body as ApiErrorEnvelope | undefined;
-    throw new ApiError(response.status, envelope?.error?.code ?? 'http_error', envelope?.error?.message ?? `Request failed (${response.status}).`);
+    throw new ApiError(response.status, envelope?.error?.code ?? 'http_error', envelope?.error?.message ?? `İstek başarısız oldu (${response.status}).`);
   }
   return body as T;
 }

@@ -64,14 +64,14 @@ export function ProjectRoadmapPage({ projectId }: { projectId: number }) {
     } catch { /* The status is saved; the next page load refreshes derived data. */ }
   }
 
-  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.roadmap} /><h1>Yol Haritası</h1><p role="status">Yol haritası yükleniyor…</p></main>;
-  if (error || !project || !progress) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.roadmap} /><h1>Yol Haritası</h1><p role="alert" className="error">{error || 'Yol haritası kullanılamıyor.'}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
+  if (loading) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.roadmap} project={project} /><h1>Yol Haritası</h1><p role="status">Yol haritası yükleniyor…</p></main>;
+  if (error || !project || !progress) return <main id="main-content" tabIndex={-1} className="shell"><ProjectPageChrome projectId={projectId} current={tr.nav.roadmap} project={project} /><h1>Yol Haritası</h1><p role="alert" className="error">{error || 'Yol haritası kullanılamıyor.'}</p><button className="secondary" onClick={() => location.reload()}>Yeniden dene</button></main>;
   const grouped = Object.fromEntries(statusOrder.map((status) => [status, tasks.filter((task) => task.status === status)])) as Record<TaskStatus, TaskResponse[]>;
   return <main id="main-content" tabIndex={-1} className="shell">
-    <ProjectPageChrome projectId={projectId} current={tr.nav.roadmap} />
+    <ProjectPageChrome projectId={projectId} current={tr.nav.roadmap} project={project} />
     <section className="page-intro"><p className="eyebrow">YOL HARİTASI VE KOD DESTEKLİ TAKİP</p><h1>{project.name}</h1><p>Görev durumu ve analiz kanıtları ayrı gösterilir. Kod kanıtları görev durumunu değiştirmez.</p></section>
     <RoadmapProgressSummary progress={progress} />
-    {tasks.length === 0 ? <section className="empty roadmap-empty"><h2>Yol haritasında görev yok</h2><p>Depodaki TODO.md kontrol listesini yol haritası aktarım API'sine gönderin. Aktarım tekrarlanabilir ve elle yapılan görev düzenlemelerini korur; görevler görevler API'siyle de oluşturulabilir.</p><code>POST /api/v1/projects/{projectId}/roadmap/import</code><pre><code>{'{ "markdown": "- [ ] Örnek görev" }'}</code></pre></section> : <section aria-label="Yol haritası görevleri" className="roadmap-groups">
+    {tasks.length === 0 ? <section className="empty roadmap-empty"><h2>Yol haritasında görev yok</h2><p>Depodaki TODO.md kontrol listesinden görevler aktarıldığında burada görünür. Görevler eklendiğinde durumlarını buradan değiştirebilir, kod kanıtlarını inceleyebilirsiniz.</p><p className="muted">Bu ekranda görev oluşturma veya aktarma henüz desteklenmiyor.</p></section> : <section aria-label="Yol haritası görevleri" className="roadmap-groups">
       {statusOrder.map((status) => <section key={status} aria-labelledby={`group-${status}`}><h2 id={`group-${status}`}>{statusLabels[status]} <span>({tr.number.format(grouped[status].length)})</span></h2>{grouped[status].length === 0 ? <p className="muted">Bu durumda görev yok.</p> : grouped[status].map((task) => <TaskTrackingCard key={task.id} task={task} assessment={assessments[task.id]} assessmentError={assessmentErrors[task.id]} onStatusChange={changeStatus} />)}</section>)}
     </section>}
   </main>;

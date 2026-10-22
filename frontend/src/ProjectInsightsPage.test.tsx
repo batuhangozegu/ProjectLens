@@ -12,9 +12,9 @@ const result = {
   metrics: {
     total_file_count: 2, physical_loc: { total: 18, unavailable_file_count: 0 },
     test_matching: { sources_total: 1, sources_with_matching_test: 1 },
-    health: { score: 90, level: 'good', confidence: 'high', components: [{ id: 'cycles', label: 'Dependency cycles', score: 100, available: true, reason: '0 of 1 files are in cycles.' }] },
-    risk: { basis: 'Heuristic risk', top_risks: [{ path: 'src/app.py', level: 'high', points: 5, factors: [{ id: 'untested', reason: 'No matching test' }] }] },
-    findings: { top_findings: [{ id: 'large_function:src/app.py:run', kind: 'large_function', severity: 'warning', path: 'src/app.py', symbol: 'run', reason: 'Function spans 160 lines.' }] },
+    health: { score: 90, level: 'good', confidence: 'high', components: [{ id: 'cycles', label: 'Dependency cycles', score: 100, available: true, reason: '0 of 1 graph files are in cycles (0.000); 25% saturates the penalty.' }] },
+    risk: { basis: 'Heuristic risk', top_risks: [{ path: 'src/app.py', level: 'high', points: 5, factors: [{ id: 'untested', reason: '0 matching test files (name/import heuristic, not coverage)' }] }] },
+    findings: { top_findings: [{ id: 'large_function:src/app.py:run', kind: 'large_function', severity: 'warning', path: 'src/app.py', symbol: 'run', reason: 'Function spans 160 lines; threshold is 80 lines.' }] },
   },
 };
 
@@ -36,13 +36,13 @@ describe('project insights page', () => {
     expect(await screen.findByRole('heading', { name: 'acme/demo' })).toBeInTheDocument();
     const metrics = screen.getByRole('region', { name: 'Ölçümler' });
     expect(within(metrics).getByText('Fiziksel satır sayısı')).toBeInTheDocument();
-    expect(within(metrics).getByText('FastAPI (python)')).toBeInTheDocument();
+    expect(within(metrics).getByText('FastAPI (Python · Çatı)')).toBeInTheDocument();
     expect(within(metrics).getByText(/test kapsamı değildir/)).toBeInTheDocument();
     expect(screen.getByText('90 / 100')).toBeInTheDocument();
-    expect(screen.getByText('0 of 1 files are in cycles.')).toBeInTheDocument();
+    expect(screen.getByText('1 grafik dosyasının 0 tanesi döngüde (oran: 0.000); ceza %25 oranında üst sınıra ulaşır.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'src/app.py' })[0]).toHaveAttribute('href', '#/projects/4/files');
-    expect(screen.getByText('No matching test')).toBeInTheDocument();
-    expect(screen.getByText('Function spans 160 lines.')).toBeInTheDocument();
+    expect(screen.getByText('Eşleşen test dosyası yok (ad/içe aktarım eşleşmesi; test kapsamı değildir).')).toBeInTheDocument();
+    expect(screen.getByText('Fonksiyon 160 satır uzunluğunda; eşik 80 satır.')).toBeInTheDocument();
   });
 
   it('explains unavailable history and missing optional metric sections', async () => {

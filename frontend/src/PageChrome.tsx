@@ -1,5 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
-import { tr } from './i18n';
+import { dateLabel, snapshotStatusLabel, tr } from './i18n';
+import type { ProjectSummary } from './api/client';
+import { Badge } from './components/Badge';
 
 const sections = [
   [tr.nav.overview, ''], [tr.nav.files, '/files'], [tr.nav.insights, '/insights'], [tr.nav.roadmap, '/roadmap'], [tr.nav.ai, '/ai'],
@@ -18,9 +20,10 @@ export function PageFrame({ children }: { children: ReactNode }) {
     const target = document.querySelector<HTMLElement>('main[tabindex="-1"]');
     target?.focus({ preventScroll: true });
   }, []);
-  return <><a className="skip-link" href="#main-content">Ana içeriğe geç</a>{children}</>;
+  return <><a className="skip-link" href="#main-content" onClick={(event) => { event.preventDefault(); document.querySelector<HTMLElement>('main[tabindex="-1"]')?.focus(); }}>Ana içeriğe geç</a>{children}</>;
 }
 
-export function ProjectPageChrome({ projectId, current }: { projectId: number; current: string }) {
-  return <><SiteHeader /><ProjectNavigation projectId={projectId} current={current} /></>;
+export function ProjectPageChrome({ projectId, current, project }: { projectId: number; current: string; project?: ProjectSummary | null }) {
+  const snapshot = project?.latest_snapshot;
+  return <div className="project-chrome"><SiteHeader />{project && <header className="project-context"><div><a href="#/" className="all-projects">← Tüm projeler</a><strong>{project.name}</strong>{project.repository_url && /^https:\/\/github\.com\//i.test(project.repository_url) && <a href={project.repository_url} target="_blank" rel="noreferrer">GitHub deposunu aç ↗</a>}</div><div className="context-meta"><span>Son analiz: {snapshot ? <time dateTime={snapshot.created_at}>{dateLabel(snapshot.created_at)}</time> : 'Henüz analiz yok'}</span><Badge tone={snapshot?.partial ? 'attention' : snapshot?.status}>{snapshot ? snapshotStatusLabel(snapshot.partial ? 'partial' : snapshot.status) : 'Analiz bekliyor'}</Badge></div></header>}<ProjectNavigation projectId={projectId} current={current} /></div>;
 }
